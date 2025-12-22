@@ -34,22 +34,26 @@ export default function Create({ auth, categories, modules }) {
         }
     }, [flash]);
 
+    // FUngsi tambah opsi
     const addOption = () => {
         setData("options", [...data.options, { text: "", category_id: "" }]);
     };
 
+    // Fungsi hapus opsi
     const removeOption = (index) => {
         const newOptions = [...data.options];
         newOptions.splice(index, 1);
         setData("options", newOptions);
     };
 
+    // Fungsi mengubah field
     const handleOptionChange = (index, field, value) => {
         const newOptions = [...data.options];
         newOptions[index][field] = value;
         setData("options", newOptions);
     };
 
+    // Fungsi submit ofrm
     const submit = (e, actionType) => {
         e.preventDefault();
         data.action = actionType;
@@ -189,7 +193,7 @@ export default function Create({ auth, categories, modules }) {
                                                 className="flex gap-3 items-start group"
                                             >
                                                 {/* Label A/B/C/D */}
-                                                <div className="pt-2 w-10 h-10 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
+                                                <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
                                                     {String.fromCharCode(
                                                         65 + index
                                                     )}
@@ -284,7 +288,7 @@ export default function Create({ auth, categories, modules }) {
                                 <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                     <Link
                                         href={route("admin.questions.index")}
-                                        className="text-gray-500 hover:text-gray-900 font-medium flex items-center gap-2 transition-colors"
+                                        className="bg-slate-600 hover:bg-slate-700 text-white font-medium py-2.5 px-5 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95"
                                     >
                                         <ArrowLeft className="w-4 h-4" />{" "}
                                         Kembali

@@ -87,7 +87,7 @@ class QuestionController extends Controller
     public function update(Request $request, Question $question)
     {
         $request->validate([
-            'module_id'             => 'required|exists:module,id',
+            'module_id'             => 'required|exists:modules,id',
             'question_text'         => 'required|string',
             'options'               => 'required|array|min:2',
             'options.*.text'        => 'required|string',

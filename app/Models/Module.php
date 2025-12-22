@@ -14,8 +14,17 @@ class Module extends Model
     /**
      * Relation one to many
      */
-    public function question()
+    public function questions()
     {
         return $this->hasMany(Question::class);
+    }
+
+    /**
+     * Relation one to many
+     */
+    public function userTests()
+
+    {
+        return $this->hasMany(UserTest::class);
     }
 }

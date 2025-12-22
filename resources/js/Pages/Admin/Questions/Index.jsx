@@ -9,6 +9,7 @@ import {
     Trash2,
     LayoutList,
     Hash,
+    Eye,
 } from "lucide-react";
 
 export default function Index({ auth, questions }) {
@@ -76,57 +77,84 @@ export default function Index({ auth, questions }) {
 
                     {/* Looping Group Modul */}
                     {Object.keys(groupedQuestions).map(
-                        (moduleName, moduleIndex) => (
-                            <div
-                                key={moduleIndex}
-                                className="mb-8 bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100"
-                            >
-                                {/* Header Modul */}
-                                <div className="px-6 py-4 bg-gray-50/80 border-b border-gray-200 flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm text-indigo-600">
-                                            <Folder className="w-5 h-5" />
+                        (moduleName, moduleIndex) => {
+                            const firstQuestion =
+                                groupedQuestions[moduleName][0];
+                            const moduleId = firstQuestion.module
+                                ? firstQuestion.module.id
+                                : null;
+
+                            return (
+                                <div
+                                    key={moduleIndex}
+                                    className="mb-8 bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100"
+                                >
+                                    {/* Header Modul */}
+                                    <div className="px-6 py-4 bg-gray-50/80 border-b border-gray-200 flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm text-indigo-600">
+                                                <Folder className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-800">
+                                                    {moduleName}
+                                                </h3>
+                                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                                                    Modul Soal
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-800">
-                                                {moduleName}
-                                            </h3>
-                                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                                                Modul Soal
-                                            </p>
+
+                                        <div className="flex items-center gap-3">
+                                            {/* Tombol Review */}
+                                            {moduleId && (
+                                                <Link
+                                                    href={route(
+                                                        "admin.modules.show",
+                                                        moduleId
+                                                    )}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 border border-indigo-200 rounded-lg text-sm font-medium hover:bg-indigo-50 hover:border-indigo-300 transition-colors shadow-sm"
+                                                    title="Review Tampilan Modul"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                    Review
+                                                </Link>
+                                            )}
+
+                                            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100">
+                                                <Hash className="w-3 h-3" />
+                                                {
+                                                    groupedQuestions[moduleName]
+                                                        .length
+                                                }{" "}
+                                                Soal
+                                            </span>
                                         </div>
                                     </div>
-                                    <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100">
-                                        <Hash className="w-3 h-3" />
-                                        {
-                                            groupedQuestions[moduleName].length
-                                        }{" "}
-                                        Soal
-                                    </span>
-                                </div>
 
-                                {/* Tabel Soal */}
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full text-left">
-                                        <thead>
-                                            <tr className="bg-white border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider font-semibold">
-                                                <th className="px-6 py-4 w-16 text-center">
-                                                    No
-                                                </th>
-                                                <th className="px-6 py-4">
-                                                    Pertanyaan
-                                                </th>
-                                                <th className="px-6 py-4 w-1/3">
-                                                    Opsi Jawaban
-                                                </th>
-                                                <th className="px-6 py-4 text-center w-32">
-                                                    Aksi
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-50">
-                                            {groupedQuestions[moduleName].map(
-                                                (q, index) => (
+                                    {/* Tabel Soal */}
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full text-left">
+                                            <thead>
+                                                <tr className="bg-white border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider font-semibold">
+                                                    <th className="px-6 py-4 w-16 text-center">
+                                                        No
+                                                    </th>
+                                                    <th className="px-6 py-4">
+                                                        Pertanyaan
+                                                    </th>
+                                                    <th className="px-6 py-4 w-1/3">
+                                                        Opsi Jawaban
+                                                    </th>
+                                                    <th className="px-6 py-4 text-center w-32">
+                                                        Aksi
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-50">
+                                                {groupedQuestions[
+                                                    moduleName
+                                                ].map((q, index) => (
                                                     <tr
                                                         key={q.id}
                                                         className="hover:bg-gray-50 transition-colors duration-150 group"
@@ -213,13 +241,13 @@ export default function Index({ auth, questions }) {
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                )
-                                            )}
-                                        </tbody>
-                                    </table>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                        )
+                            );
+                        }
                     )}
                 </div>
             </div>
