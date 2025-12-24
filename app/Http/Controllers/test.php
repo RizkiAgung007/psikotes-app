@@ -1,44 +1,41 @@
-// ... method index, store, update, destroy yang lama ...
+<?php
 
-    // 1. TAMPILKAN HALAMAN INPUT PENJELASAN
-    public function editInterpretations(Category $category)
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\UserTest;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class TestResultController extends Controller
+{
+    /**
+     * Menampilkan daftar semua hasil tes peserta
+     */
+    public function index()
     {
-        // Load interpretasi yang sudah ada (jika pernah diisi sebelumnya)
-        $category->load('interpretations');
+        // Ambil data tes yang sudah selesai (finished_at tidak null)
+        // Load juga data user (nama) dan module (nama tes)
+        $results = UserTest::with(['user', 'module'])
+            ->whereNotNull('finished_at')
+            ->latest()
+            ->paginate(10); // Kita batasi 10 per halaman biar rapi
 
-        // Hitung total kategori dalam modul yang sama
-        // Ini untuk menentukan kita butuh input Rank 1 sampai berapa?
-        $totalRanks = Category::where('module_id', $category->module_id)->count();
-
-        return Inertia::render('Admin/Categories/Interpretations', [
-            'category'   => $category,
-            'totalRanks' => $totalRanks, // Kirim jumlah rank ke React (misal: 4)
-            'existing'   => $category->interpretations // Kirim data lama buat di-edit
+        return Inertia::render('Admin/TestResults/Index', [
+            'results' => $results
         ]);
     }
 
-    // 2. SIMPAN DATA KE DATABASE
-    public function updateInterpretations(Request $request, Category $category)
+    /**
+     * Menampilkan detail hasil tes satu peserta
+     */
+    public function show($id)
     {
-        // Validasi: interpretations harus array
-        $request->validate([
-            'interpretations' => 'required|array',
-            'interpretations.*.rank' => 'required|integer',
-            'interpretations.*.description' => 'required|string',
+        // Cari data tes berdasarkan ID
+        $testResult = UserTest::with(['user', 'module'])->findOrFail($id);
+
+        return Inertia::render('Admin/TestResults/Show', [
+            'testResult' => $testResult
         ]);
-
-        // Kita gunakan Transaction biar aman
-        // Hapus yang lama, simpan yang baru (atau update one-by-one)
-        // Cara paling mudah: Loop data dari form
-
-        foreach ($request->interpretations as $data) {
-            // Update atau Create berdasarkan (category_id & rank)
-            $category->interpretations()->updateOrCreate(
-                ['rank' => $data['rank']], // Kunci pencarian
-                ['description' => $data['description']] // Data yang diupdate
-            );
-        }
-
-        return redirect()->route('admin.categories.index')
-                         ->with('message', 'Penjelasan kategori berhasil disimpan');
     }
+}

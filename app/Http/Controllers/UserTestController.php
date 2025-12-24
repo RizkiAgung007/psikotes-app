@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CategoryInterpretation;
 use App\Models\Module;
 use App\Models\Option;
 use App\Models\UserAnswer;
@@ -114,27 +115,49 @@ class UserTestController extends Controller
 
             $answers = UserAnswer::with(['option.category'])->where('user_test_id', $test->id)->get();
 
-            $stats = [];
+            $groupStats = [];
 
             foreach ($answers as $ans) {
-                if ($ans->option->category) {
-                    $categoryName = $ans->option->category->name;
-                } else {
-                    $categoryName = "Uncategorized";
-                }
+                if ($ans->option && $ans->option->category) {
+                    $catId = $ans->option->category->id;
+                    $catName = $ans->option->category->name;
+                    $catCode = $ans->option->category->code;
 
-                if (!isset($stats[$categoryName])) {
-                    $stats[$categoryName] = 0;
+                    if (!isset($groupedStats[$catId])) {
+                        $groupedStats[$catId] = [
+                            'id' => $catId,
+                            'name' => $catName,
+                            'code' => $catCode,
+                            'score' => 0
+                        ];
+                    }
+                    $groupedStats[$catId]['score'] += $ans->score;
                 }
-
-                $stats[$categoryName] += $ans->score;
             }
 
-            arsort($stats);
+            // Ubah ke Array Biasa & Sorting (Ranking)
+            $rankedResults = array_values($groupedStats);
+
+            // Urutkan Skor Tertinggi -> Terendah
+            usort($rankedResults, function ($a, $b) {
+                return $b['score'] <=> $a['score'];
+            });
+
+            // Loop hasil ranking, Rank 1 cari penjelasan rank 1, dst.
+            foreach ($rankedResults as $index => &$result) {
+                $rank = $index + 1;
+                $result['rank'] = $rank;
+
+                $interpretation = CategoryInterpretation::where('category_id', $result['id'])
+                                    ->where('rank', $rank)
+                                    ->first();
+
+                $result['description'] = $interpretation ? $interpretation->description : "Belum ada penjelasan untuk peringkat ini.";
+            }
 
             $test->update([
                 'finished_at' => now(),
-                'result'      => json_encode($stats)
+                'result'      => json_encode($rankedResults) 
             ]);
         });
 

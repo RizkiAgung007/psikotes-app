@@ -1,9 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
-import { ArrowLeft, User, Calendar, FileText } from "lucide-react"; // Tambah icon yang kurang
+import { ArrowLeft, Calendar, FileText, User } from "lucide-react";
 import React from "react";
 
-// UBAH DISINI: Tangkap 'testResult', bukan 'result'
 export default function Show({ auth, testResult }) {
     // Helper mengubah data hasil dari JSON ke array aman
     const getResultData = (data) => {
@@ -17,18 +16,18 @@ export default function Show({ auth, testResult }) {
         return data || [];
     };
 
-    // UBAH DISINI: Gunakan testResult
     const results = getResultData(testResult.result);
 
     // Helper format tanggal
     const formatDate = (dateString) => {
+        const date = new Date(dateString);
         return new Intl.DateTimeFormat("id-ID", {
             day: "numeric",
             month: "long",
             year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-        }).format(new Date(dateString));
+        }).format(date);
     };
 
     return (
@@ -37,14 +36,12 @@ export default function Show({ auth, testResult }) {
             header={
                 <div className="flex items-center gap-4">
                     <Link
-                        // Tambahkan href agar tombol back berfungsi
-                        href={route("test-results.index")}
+                        href={route("admin.results.index")}
                         className="p-2 bg-white rounded-full text-gray-500 hover:text-gray-800 border shadow-sm transition-all"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        {/* UBAH DISINI: Gunakan testResult */}
                         Detail Hasil Peserta: {testResult.user.name}
                     </h2>
                 </div>
@@ -54,7 +51,7 @@ export default function Show({ auth, testResult }) {
 
             <div className="py-12">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    {/* KARTU INFO PESERTA */}
+                    {/* Info User */}
                     <div className="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6 mb-8 flex flex-col md:flex-row justify-between md:items-center gap-4">
                         <div>
                             <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -83,14 +80,11 @@ export default function Show({ auth, testResult }) {
                         </div>
                     </div>
 
-                    {/* HASIL ANALISA (LOOPING) */}
+                    {/* Hasil Tes looping semua */}
                     <div className="space-y-6">
                         {results.length > 0 ? (
                             results.map((item, index) => (
-                                <div
-                                    key={index}
-                                    c
-                                >
+                                <div key={index} c>
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
@@ -122,7 +116,7 @@ export default function Show({ auth, testResult }) {
                                         </div>
                                     </div>
 
-                                    <div className="prose max-w-none text-gray-700 leading-relaxed text-justify border-t pt-4">
+                                    <div className="prose max-w-none text-gray-700 leading-relaxed text-justify border-t pt-4 border-b-4">
                                         {item.description}
                                     </div>
                                 </div>

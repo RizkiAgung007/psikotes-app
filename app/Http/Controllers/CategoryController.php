@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Module;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,8 +16,11 @@ class CategoryController extends Controller
     {
         $categories = Category::latest()->get();
 
+        $modules = Module::all();
+
         return Inertia::render('Admin/Categories/Index', [
-            'categories' => $categories
+            'categories' => $categories,
+            'modules'    => $modules
         ]);
     }
 
@@ -27,15 +31,31 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:categories,code'
+            'code' => 'required|string|max:10|unique:categories,code',
+            'module_id' => 'required|exists:modules,id',
         ]);
 
         Category::create([
-            'name' => $request->name,
-            'code' => $request->code
+            'name'      => $request->name,
+            'code'      => $request->code,
+            'module_id' => $request->module_id,
         ]);
 
         return redirect()->back()->with('message', 'Kategori berhasil ditambahkan');
+    }
+
+    /**
+     * Menampilkan detail kategori
+     */
+    public function show(Category $category)
+    {
+        $category->load(['module', 'interpretation' => function ($q) {
+            $q->orderBy('rank', 'asc');
+        }]);
+
+        return Inertia::render('Admin/categories/Show', [
+            'category' => $category
+        ]);
     }
 
     /**
@@ -44,8 +64,9 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:categories,code,' . $category->id
+            'name'      => 'required|string|max:255',
+            'code'      => 'required|string|max:10|unique:categories,code,' . $category->id,
+            'module_id' => 'required|exists:modules,id',
         ]);
 
         $category->update($request->all());
@@ -91,7 +112,7 @@ class CategoryController extends Controller
 
         foreach($request->interpretations as $data) {
             $category->interpretations()->updateOrCreate(
-                ['ranks'        => $data['rank']],
+                ['rank'        => $data['rank']],
                 ['description'  => $data['description']]
             );
         }

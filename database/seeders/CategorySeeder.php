@@ -13,15 +13,6 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $data = [
-            ['code' => 'V', 'name' => 'Visual'],
-            ['code' => 'A', 'name' => 'Auditory'],
-            ['code' => 'K', 'name' => 'Kinesthetic'],
-            ['code' => 'D', 'name' => 'Digital'],
-        ];
-
-        foreach ($data as $item) {
-            Category::create($item);
-        }
+        //
     }
 }

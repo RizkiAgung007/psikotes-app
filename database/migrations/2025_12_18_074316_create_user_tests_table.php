@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('module_id')->constrained()->onDelete('cascade');
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('finished_at')->nullable();
-            $table->string('result')->nullable();
+            $table->text('result')->nullable();
             $table->timestamps();
         });
 
@@ -35,6 +35,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('user_tests');
-        Schema::dropIfExists('user_ansers');
+        Schema::dropIfExists('user_answers');
     }
 };

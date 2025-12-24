@@ -13,14 +13,6 @@ class ModuleSeeder extends Seeder
      */
     public function run(): void
     {
-        Module::create([
-            'name'        => 'Personality Test',
-            'description' => 'Tes Kepribadian Dasar (V/A/K/D)'
-        ]);
-
-        Module::create([
-            'name'        => 'Communication Style',
-            'description' => 'Tes Gaya Komunikasi'
-        ]);
+        //
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\UserTestController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -36,11 +37,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('questions', QuestionController::class);
     Route::resource('modules', ModuleController::class);
+    Route::get('/modules/{id}/detail', [ModuleController::class, 'detail'])->name('modules.detail');
     Route::resource('categories', CategoryController::class);
-    Route::get('categories/{category}/interpretations', [CategoryController::class, 'editInterpretations'])->name('admin.categories.interpretations');
-    Route::post('categories/{category}/interpretations', [CategoryController::class, 'updateInterpretations'])->name('admin.categories.interpretations.update');
+    Route::get('categories/{category}/interpretations', [CategoryController::class, 'editInterpretations'])->name('categories.interpretations');
+    Route::post('categories/{category}/interpretations', [CategoryController::class, 'updateInterpretations'])->name('categories.interpretations.update');
+    Route::get('/results', [TestResultController::class, 'index'])->name('results.index');
+    Route::get('/results/{id}', [TestResultController::class, 'show'])->name('results.show');
 });
-
-
 
 require __DIR__.'/auth.php';

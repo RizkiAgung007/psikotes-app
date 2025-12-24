@@ -9,7 +9,11 @@ class UserTest extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $guarded = [];
+
+    protected $casts = [
+        'result' => 'array'
+    ];
 
     public function user()
     {

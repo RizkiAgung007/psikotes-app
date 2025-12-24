@@ -71,6 +71,28 @@ export default function AuthenticatedLayout({ header, children }) {
                                         >
                                             Kategori
                                         </NavLink>
+
+                                        <NavLink
+                                            href={route(
+                                                "admin.modules.index"
+                                            )}
+                                            active={route().current(
+                                                "admin.modules.*"
+                                            )}
+                                        >
+                                            Modul
+                                        </NavLink>
+
+                                        <NavLink
+                                            href={route(
+                                                "admin.results.index"
+                                            )}
+                                            active={route().current(
+                                                "admin.results.*"
+                                            )}
+                                        >
+                                            Result
+                                        </NavLink>
                                     </>
                                 )}
                             </div>
@@ -207,6 +229,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                     )}
                                 >
                                     Kategori
+                                </ResponsiveNavLink>
+
+                                <ResponsiveNavLink
+                                    href={route("admin.modules.index")}
+                                    active={route().current(
+                                        "admin.modules.*"
+                                    )}
+                                >
+                                    Modul
                                 </ResponsiveNavLink>
                             </>
                         )}

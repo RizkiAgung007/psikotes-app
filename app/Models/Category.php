@@ -15,4 +15,9 @@ class Category extends Model
     {
         return $this->hasMany(CategoryInterpretation::class);
     }
+
+    public function module()
+    {
+        return $this->belongsTo(Module::class);
+    }
 }

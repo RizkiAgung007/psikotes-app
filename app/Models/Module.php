@@ -27,4 +27,9 @@ class Module extends Model
     {
         return $this->hasMany(UserTest::class);
     }
+
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
 }
