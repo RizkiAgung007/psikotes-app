@@ -1,346 +1,163 @@
+import CategoryForm from "@/Components/Category/CategoryForm";
+import CategoryGroup from "@/Components/Category/CategoryGroup";
+import DangerButton from "@/Components/DangerButton";
+import Modal from "@/Components/Modal";
+import SecondaryButton from "@/Components/SecondaryButton";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm } from "@inertiajs/react";
-import { Save, Clock, AlertTriangle } from "lucide-react"; // Tambah Icon Clock & Alert
-import React, { useEffect, useState } from "react"; // Tambah useEffect & useState
+import { Head, router, useForm } from "@inertiajs/react";
+import { AlertTriangle } from "lucide-react";
+import React, { useState } from "react";
 
-// Tambahkan 'remaining_time' di props
-export default function Show({ auth, test, questions, remaining_time }) {
-    // 1. STATE TIMER
-    const [timeLeft, setTimeLeft] = useState(remaining_time);
+export default function Index({ auth, categories, modules }) {
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [confirmationDelete, setConfirmationDelete] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
 
-    // State jawaban: { option_id: score }
-    const { data, setData, post, processing } = useForm({
-        answers: {},
-    });
-
-    // 2. LOGIKA TIMER BERJALAN
-    useEffect(() => {
-        // Jika waktu sudah habis dari awal, jangan jalankan interval
-        if (timeLeft <= 0) return;
-
-        const intervalId = setInterval(() => {
-            setTimeLeft((prevTime) => {
-                // Jika waktu tersisa 1 detik, kurangi jadi 0 lalu submit otomatis
-                if (prevTime <= 1) {
-                    clearInterval(intervalId);
-                    handleAutoSubmit(); // Fungsi submit paksa
-                    return 0;
-                }
-                return prevTime - 1;
-            });
-        }, 1000);
-
-        // Bersihkan interval saat komponen di-unmount
-        return () => clearInterval(intervalId);
-    }, []);
-
-    // 3. FUNGSI AUTO SUBMIT (TANPA KONFIRMASI)
-    const handleAutoSubmit = () => {
-        // Langsung post tanpa confirm dialog
-        // Menggunakan preserveScroll: true agar tidak loncat
-        post(route("exam.submit", test.id), {
-            replace: true,
+    // State & Form Logic
+    const { data, setData, post, put, processing, errors, reset, clearErrors } =
+        useForm({
+            name: "",
+            code: "",
+            module_id: "",
         });
-    };
 
-    // 4. HELPER FORMAT WAKTU (Detik -> MM:SS)
-    const formatTime = (seconds) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-
-        if (h > 0) {
-            return `${h}:${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
-        }
-        return `${m}:${s < 10 ? "0" : ""}${s}`;
-    };
-
-    // Handle Rating (Kode Lama Anda)
-    const handleRatingChange = (question, currentOptionId, newScore) => {
-        const newAnswers = { ...data.answers };
-        newAnswers[currentOptionId] = newScore;
-
-        question.options.forEach((opt) => {
-            if (opt.id !== currentOptionId) {
-                if (newAnswers[opt.id] === newScore) {
-                    delete newAnswers[opt.id];
-                }
-            }
-        });
-        setData("answers", newAnswers);
-    };
-
-    // Menghitung Progress
-    const totalItemsToRate = questions.reduce(
-        (total, q) => total + q.options.length,
-        0
-    );
-    const answeredCount = Object.keys(data.answers).length;
-    const isAllAnswered = answeredCount === totalItemsToRate;
-
-    // Handle Submit MANUAL (User Klik Tombol)
+    // Fungsi Submit
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // Validasi Manual tetap ada konfirmasinya
-        if (!isAllAnswered) {
-            if (
-                !confirm(
-                    `Anda baru menilai ${answeredCount} dari ${totalItemsToRate} item. Yakin ingin mengumpulkan?`
-                )
-            ) {
-                return;
-            }
+        if (editingCategory) {
+            put(route("admin.categories.update", editingCategory.id), {
+                onSuccess: () => cancelEdit(),
+            });
         } else {
-            if (!confirm("Apakah Anda yakin ingin mengumpulkan jawaban ini?")) {
-                return;
-            }
+            post(route("admin.categories.store"), {
+                onSuccess: () => reset(),
+            });
         }
-        post(route("exam.submit", test.id));
     };
 
-    // Tentukan warna timer (Merah jika < 5 menit)
-    const isUrgent = timeLeft < 300; // Kurang dari 300 detik (5 menit)
+    // Fungsi Edit
+    const handleEdit = (category) => {
+        setEditingCategory(category);
+        setData({
+            name: category.name,
+            code: category.code,
+            module_id: category.module_id,
+        });
+        clearErrors();
+    };
+
+    // Fungsi Cancel
+    const cancelEdit = () => {
+        setEditingCategory(null);
+        reset();
+        clearErrors();
+    };
+
+    // Buka modal delete
+    const openModal = (id) => {
+        setDeleteId(id);
+        setConfirmationDelete(true);
+    };
+
+    // Tutup modal delete
+    const closeModal = () => {
+        setConfirmationDelete(false);
+        setDeleteId(null);
+    };
+
+    // Tombol hapus
+    const deleteModal = () => {
+        router.delete(route("admin.categories.destroy", deleteId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (editingCategory && editingCategory.id === deleteId) {
+                    cancelEdit();
+                }
+                closeModal();
+            },
+            onFinish: () => closeModal(),
+        });
+    };
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                            {test.module.name}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            Berikan penilaian untuk setiap pernyataan di bawah
-                            ini.
-                        </p>
-                    </div>
-
-                    {/* Badge Progress */}
-                    <div
-                        className={`px-4 py-2 rounded-full text-sm font-bold border transition-colors ${
-                            isAllAnswered
-                                ? "bg-green-100 text-green-700 border-green-200"
-                                : "bg-indigo-50 text-indigo-700 border-indigo-200"
-                        }`}
-                    >
-                        Terisi: {answeredCount} / {totalItemsToRate} Item
-                    </div>
-                </div>
+                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                    Kelola Kategori
+                </h2>
             }
         >
-            <Head title={`Ujian: ${test.module.name}`} />
+            <Head title="Kelola Kategori" />
 
-            <div className="py-12 pb-40">
-                {" "}
-                {/* Padding bawah ditambah agar tidak tertutup footer */}
-                <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
-                    {/* ALERT JIKA WAKTU TINGGAL DIKIT */}
-                    {isUrgent && timeLeft > 0 && (
-                        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-center gap-3 animate-pulse">
-                            <AlertTriangle className="text-red-500 w-6 h-6" />
-                            <div>
-                                <p className="font-bold text-red-700">
-                                    Waktu Hampir Habis!
-                                </p>
-                                <p className="text-sm text-red-600">
-                                    Segera selesaikan jawaban Anda.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="space-y-8">
-                            {questions.map((question, qIndex) => {
-                                const maxScale = question.options.length;
-                                const dynamicScale = Array.from(
-                                    { length: maxScale },
-                                    (_, i) => i + 1
-                                );
-
-                                return (
-                                    <div
-                                        key={question.id}
-                                        className="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100"
-                                    >
-                                        {/* Header Pertanyaan */}
-                                        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex gap-3 items-start">
-                                            <span className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm">
-                                                {qIndex + 1}
-                                            </span>
-                                            <h3 className="text-gray-900 font-bold text-lg leading-snug pt-1">
-                                                {question.question_text}
-                                            </h3>
-                                        </div>
-
-                                        {/* List Opsi */}
-                                        <div className="divide-y divide-gray-50">
-                                            {question.options.map((option) => (
-                                                <div
-                                                    key={option.id}
-                                                    className="p-4 md:p-6 hover:bg-gray-50/50 transition-colors"
-                                                >
-                                                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-                                                        <div className="flex-1 min-w-[300px]">
-                                                            <p className="text-gray-700 font-medium">
-                                                                {
-                                                                    option.option_text
-                                                                }
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            {dynamicScale.map(
-                                                                (
-                                                                    scoreValue
-                                                                ) => {
-                                                                    const isSelected =
-                                                                        data
-                                                                            .answers[
-                                                                            option
-                                                                                .id
-                                                                        ] ===
-                                                                        scoreValue;
-                                                                    const isTakenByOther =
-                                                                        question.options.some(
-                                                                            (
-                                                                                opt
-                                                                            ) =>
-                                                                                opt.id !==
-                                                                                    option.id &&
-                                                                                data
-                                                                                    .answers[
-                                                                                    opt
-                                                                                        .id
-                                                                                ] ===
-                                                                                    scoreValue
-                                                                        );
-
-                                                                    return (
-                                                                        <label
-                                                                            key={
-                                                                                scoreValue
-                                                                            }
-                                                                            className="cursor-pointer relative"
-                                                                        >
-                                                                            <input
-                                                                                type="radio"
-                                                                                name={`option_${option.id}`}
-                                                                                value={
-                                                                                    scoreValue
-                                                                                }
-                                                                                checked={
-                                                                                    isSelected
-                                                                                }
-                                                                                onChange={() =>
-                                                                                    handleRatingChange(
-                                                                                        question,
-                                                                                        option.id,
-                                                                                        scoreValue
-                                                                                    )
-                                                                                }
-                                                                                className="sr-only"
-                                                                            />
-                                                                            <div
-                                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm border transition-all duration-200 ${
-                                                                                    isSelected
-                                                                                        ? "bg-indigo-600 border-indigo-600 text-white shadow-md scale-110 z-10"
-                                                                                        : isTakenByOther
-                                                                                        ? "bg-gray-100 border-gray-200 text-gray-300"
-                                                                                        : "bg-white border-gray-200 text-gray-400 hover:border-indigo-300 hover:text-indigo-500"
-                                                                                }`}
-                                                                            >
-                                                                                {
-                                                                                    scoreValue
-                                                                                }
-                                                                            </div>
-                                                                        </label>
-                                                                    );
-                                                                }
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* --- FOOTER FIXED (TIMER & TOMBOL) --- */}
-                        <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
-                            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                                {/* Bagian Kiri: Timer & Progress Text */}
-                                <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
-                                    {/* 5. TAMPILAN TIMER */}
-                                    <div
-                                        className={`flex items-center gap-2 text-xl font-mono font-bold ${
-                                            isUrgent
-                                                ? "text-red-600 animate-pulse"
-                                                : "text-gray-800"
-                                        }`}
-                                    >
-                                        <Clock className="w-6 h-6" />
-                                        <span>{formatTime(timeLeft)}</span>
-                                    </div>
-
-                                    <div className="flex flex-col md:hidden">
-                                        <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">
-                                            Progress
-                                        </span>
-                                        <span className="text-sm font-semibold text-gray-700">
-                                            {answeredCount} / {totalItemsToRate}
-                                        </span>
-                                    </div>
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div className="flex flex-col md:flex-row gap-6">
+                        {/* Daftar Kategori */}
+                        <div className="flex-1 space-y-8">
+                            {modules.length > 0 ? (
+                                modules.map((module) => (
+                                    <CategoryGroup
+                                        key={module.id}
+                                        module={module}
+                                        categories={categories}
+                                        onEdit={handleEdit}
+                                        onDelete={openModal}
+                                    />
+                                ))
+                            ) : (
+                                <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+                                    Belum ada modul. Silakan buat Modul terlebih
+                                    dahulu.
                                 </div>
-
-                                {/* Bagian Kanan: Progress Bar & Tombol */}
-                                <div className="flex-1 flex gap-4 items-center justify-end w-full md:w-auto">
-                                    {/* Progress Bar (Hidden on Mobile to save space) */}
-                                    <div className="hidden md:block w-32 md:w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-500 ${
-                                                isAllAnswered
-                                                    ? "bg-green-500"
-                                                    : "bg-indigo-500"
-                                            }`}
-                                            style={{
-                                                width: `${
-                                                    (answeredCount /
-                                                        totalItemsToRate) *
-                                                    100
-                                                }%`,
-                                            }}
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className={`w-full md:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
-                                            isAllAnswered
-                                                ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                                                : "bg-gray-800 hover:bg-gray-700"
-                                        }`}
-                                    >
-                                        {processing ? (
-                                            "Menyimpan..."
-                                        ) : (
-                                            <>
-                                                <Save className="w-5 h-5" />
-                                                <span>Kirim Jawaban</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
+                            )}
                         </div>
-                    </form>
+
+                        {/* Form Input */}
+                        <div className="w-full md:w-1/3">
+                            <CategoryForm
+                                data={data}
+                                setData={setData}
+                                errors={errors}
+                                processing={processing}
+                                modules={modules}
+                                editingCategory={editingCategory}
+                                onSubmit={handleSubmit}
+                                onCancel={cancelEdit}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Modal hapus */}
+            <Modal show={confirmationDelete} onClose={closeModal}>
+                <div className="p-6">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <AlertTriangle className="w-8 h-8" />
+                        <h2 className="text-lg font-medium text-gray-900">
+                            Konfirmasi Penghapusan
+                        </h2>
+                    </div>
+
+                    <p className="mt-1 text-sm text-gray-600">
+                        Apakah Anda yakin ingin menghapus kategori ini?
+                        <br />
+                        Data interpretasi dan soal yang terkait dengan kategori
+                        ini mungkin akan terpengaruh.
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton onClick={closeModal}>
+                            Batal
+                        </SecondaryButton>
+
+                        <DangerButton onClick={deleteModal}>
+                            Ya, Hapus Kategori
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

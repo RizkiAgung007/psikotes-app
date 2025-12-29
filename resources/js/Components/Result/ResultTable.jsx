@@ -26,7 +26,9 @@ export default function ResultTable({ results, onReset }) {
             } catch (error) {
                 console.error("Gagal parsing JSON:", error);
                 return (
-                    <span className="text-red-400 text-xs">Error Format</span>
+                    <span className="text-red-500 text-xs font-medium">
+                        Error Format
+                    </span>
                 );
             }
         }
@@ -41,7 +43,7 @@ export default function ResultTable({ results, onReset }) {
 
         if (dominan) {
             return (
-                <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold border border-indigo-200">
+                <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md text-xs font-bold border border-indigo-100">
                     {dominan.name} ({dominan.score})
                 </span>
             );
@@ -51,32 +53,28 @@ export default function ResultTable({ results, onReset }) {
     };
 
     return (
-        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-100">
-            <div className="p-6">
-                <div className="overscroll-auto">
+        <div className="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+            <div className="p-0">
+                <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
-                                <th className="p-4 font-bold">
-                                    Tanggal Selesai
-                                </th>
-                                <th className="p-4 font-bold">Peserta</th>
-                                <th className="p-4 font-bold">Modul Tes</th>
-                                <th className="p-4 font-bold">Hasil Dominan</th>
-                                <th className="p-4 font-bold text-right">
-                                    Aksi
-                                </th>
+                            <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider font-semibold">
+                                <th className="p-4">Tanggal Selesai</th>
+                                <th className="p-4">Peserta</th>
+                                <th className="p-4">Modul Tes</th>
+                                <th className="p-4">Hasil Dominan</th>
+                                <th className="p-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 text-sm">
+                        <tbody className="divide-y divide-gray-50 text-sm">
                             {results.data.length > 0 ? (
                                 results.data.map((item) => (
                                     <tr
                                         key={item.id}
-                                        className="hover:bg-gray-50 transition-colors"
+                                        className="hover:bg-gray-50 transition-colors duration-150"
                                     >
                                         {/* Tanggal */}
-                                        <td className="p-4 whitespace-nowrap text-gray-500">
+                                        <td className="p-4 whitespace-nowrap text-gray-600">
                                             <div className="flex items-center gap-2">
                                                 <Clock className="w-4 h-4 text-gray-400" />
                                                 {formatDate(item.finished_at)}
@@ -84,31 +82,31 @@ export default function ResultTable({ results, onReset }) {
                                         </td>
 
                                         {/* Peserta */}
-                                        <td className="p-4 font-bold text-gray-800">
-                                            <div className="flex items-center gap-2">
-                                                <User className="w-4 h-4 text-gray-400" />
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 border border-gray-200">
+                                                    <User className="w-4 h-4" />
+                                                </div>
                                                 <div className="flex flex-col">
-                                                    <p>
+                                                    <span className="font-bold text-gray-800">
                                                         {item.user
                                                             ? item.user.name
                                                             : "Deleted User"}
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">
                                                         {item.user
                                                             ? item.user.email
                                                             : ""}
-                                                    </p>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </td>
 
                                         {/* Modul */}
-                                        <td className="p-4 text-gray-600">
-                                            <div className="flex items-center gap-2">
-                                                {item.module
-                                                    ? item.module.name
-                                                    : "Deleted Module"}
-                                            </div>
+                                        <td className="p-4 text-gray-700 font-medium">
+                                            {item.module
+                                                ? item.module.name
+                                                : "Deleted Module"}
                                         </td>
 
                                         {/* Hasil Dominan */}
@@ -117,8 +115,8 @@ export default function ResultTable({ results, onReset }) {
                                         </td>
 
                                         {/* Aksi */}
-                                        <td className="p-4 text-right">
-                                            <div className="flex justify-end items-center gap-2">
+                                        <td className="p-4 text-center">
+                                            <div className="flex justify-center items-center gap-2">
                                                 <Link
                                                     href={route(
                                                         "admin.results.show",
@@ -127,7 +125,7 @@ export default function ResultTable({ results, onReset }) {
                                                     className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
                                                     title="Lihat Detail"
                                                 >
-                                                    <Eye className="w-5 h-5" />
+                                                    <Eye className="w-4 h-4" />
                                                 </Link>
 
                                                 <button
@@ -141,7 +139,7 @@ export default function ResultTable({ results, onReset }) {
                                                     className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all"
                                                     title="Reset Hasil"
                                                 >
-                                                    <Trash2 className="w-5 h-5" />
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>
@@ -151,7 +149,7 @@ export default function ResultTable({ results, onReset }) {
                                 <tr>
                                     <td
                                         colSpan="5"
-                                        className="p-8 text-center text-gray-400 italic bg-gray-50"
+                                        className="p-12 text-center text-gray-400 italic bg-white"
                                     >
                                         Belum ada data hasil tes yang masuk.
                                     </td>
@@ -163,15 +161,15 @@ export default function ResultTable({ results, onReset }) {
 
                 {/* Pagination */}
                 {results.links && results.links.length > 3 && (
-                    <div className="mt-4 flex justify-end gap-1">
+                    <div className="p-4 border-t border-gray-100 bg-gray-50/30 flex justify-end gap-1">
                         {results.links.map((link, k) => (
                             <Link
                                 key={k}
                                 href={link.url}
-                                className={`px-3 py-1 text-sm rounded border ${
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
                                     link.active
-                                        ? "bg-indigo-600 text-white border-indigo-600"
-                                        : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
                                 } ${
                                     !link.url
                                         ? "opacity-50 cursor-not-allowed pointer-events-none"

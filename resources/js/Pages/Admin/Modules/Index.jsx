@@ -1,11 +1,17 @@
+import DangerButton from "@/Components/DangerButton";
+import Modal from "@/Components/Modal";
 import ModuleForm from "@/Components/Module/ModuleForm";
 import ModuleList from "@/Components/Module/ModuleList";
+import SecondaryButton from "@/Components/SecondaryButton";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, useForm } from "@inertiajs/react";
+import { AlertTriangle, Layers } from "lucide-react";
 import React, { useState } from "react";
 
 export default function Index({ auth, modules }) {
     const [editingModule, setEditingModule] = useState(null);
+    const [confirmationDelete, setConfirmationDelete] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
 
     // Setup form
     const { data, setData, post, put, processing, errors, reset, clearErrors } =
@@ -48,27 +54,44 @@ export default function Index({ auth, modules }) {
         clearErrors();
     };
 
-    // Handle delete
-    const handleDelete = (id) => {
-        if (
-            confirm(
-                "Yakin hapus modul ini? Semua soal & Kategori didalamnya akan ikut terhapus!"
-            )
-        ) {
-            router.delete(route("admin.modules.destroy", id));
-            if (editingModule && editingModule.id === id) {
-                cancelEdit();
-            }
-        }
+    // Fungsi open modal
+    const openModal = (id) => {
+        setDeleteId(id);
+        setConfirmationDelete(true);
+    };
+
+    // Fungsi close modal
+    const closeModal = () => {
+        setConfirmationDelete(false);
+        setDeleteId(null);
+    };
+
+    // Tombol hapus
+    const deleteModal = () => {
+        router.delete(route("admin.modules.destroy", deleteId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (editingModule && editingModule.id === deleteId) {
+                    cancelEdit();
+                }
+                closeModal();
+            },
+            onFinish: () => closeModal(),
+        });
     };
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    Kelola Modul
-                </h2>
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-200">
+                        <Layers className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h2 className="font-bold text-xl text-gray-800 leading-tight">
+                        Kelola Modul
+                    </h2>
+                </div>
             }
         >
             <Head title="Kelola Modul" />
@@ -80,7 +103,7 @@ export default function Index({ auth, modules }) {
                         <ModuleList
                             modules={modules}
                             onEdit={handleEdit}
-                            onDelete={handleDelete}
+                            onDelete={openModal}
                         />
 
                         {/* Form Component */}
@@ -98,6 +121,37 @@ export default function Index({ auth, modules }) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal hapus */}
+            <Modal show={confirmationDelete} onClose={closeModal}>
+                <div className="p-6">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <div className="bg-red-100 p-2 rounded-full">
+                            <AlertTriangle className="w-6 h-6" />
+                        </div>
+                        <h2 className="text-lg font-bold text-gray-900">
+                            Konfirmasi Penghapusan
+                        </h2>
+                    </div>
+
+                    <p className="mt-1 text-sm text-gray-600 leading-relaxed">
+                        Apakah Anda yakin ingin menghapus module ini?
+                        <br />
+                        Data interpretasi dan soal yang terkait dengan module
+                        ini mungkin akan terpengaruh.
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton onClick={closeModal}>
+                            Batal
+                        </SecondaryButton>
+
+                        <DangerButton onClick={deleteModal}>
+                            Ya, Hapus Module
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

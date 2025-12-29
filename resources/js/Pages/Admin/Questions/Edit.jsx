@@ -1,7 +1,7 @@
 import QuestionForm from "@/Components/QuestionForm";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft, Pencil, Save } from "lucide-react";
+import { ArrowLeft, FileEdit, Save } from "lucide-react";
 import React from "react";
 
 export default function Edit({ auth, categories, modules, question }) {
@@ -44,57 +44,62 @@ export default function Edit({ auth, categories, modules, question }) {
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex items-center gap-2">
-                    <Pencil className="w-6 h-6 text-gray-700" />
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Edit Soal
-                    </h2>
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-200 text-indigo-600">
+                        <FileEdit className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-xl text-gray-900 leading-tight">
+                            Edit Soal
+                        </h2>
+                        <p className="text-sm text-gray-500 font-medium">
+                            Perbarui detail pertanyaan dan opsi jawaban.
+                        </p>
+                    </div>
                 </div>
             }
         >
             <Head title="Edit Soal" />
 
             <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
-                        <div className="p-8">
-                            <form onSubmit={submit}>
-                                {/* Panggil Komponen Form */}
-                                <QuestionForm
-                                    data={data}
-                                    setData={setData}
-                                    errors={errors}
-                                    modules={modules}
-                                    categories={categories}
-                                    addOption={addOption}
-                                    removeOption={removeOption}
-                                    handleOptionChange={handleOptionChange}
-                                />
+                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 px-4">
+                    <form onSubmit={submit}>
+                        {/* Panggil Komponen Form */}
+                        <QuestionForm
+                            data={data}
+                            setData={setData}
+                            errors={errors}
+                            modules={modules}
+                            categories={categories}
+                            addOption={addOption}
+                            removeOption={removeOption}
+                            handleOptionChange={handleOptionChange}
+                        />
 
-                                {/* Tombol Aksi (Footer Form) */}
-                                <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-8">
-                                    <Link
-                                        href={route("admin.questions.index")}
-                                        className="bg-slate-600 hover:bg-slate-700 text-white font-medium py-2.5 px-5 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95"
-                                    >
-                                        <ArrowLeft className="w-4 h-4" /> Batal
-                                        & Kembali
-                                    </Link>
+                        {/* Card Tombol Aksi */}
+                        <div className="mt-6 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <Link
+                                    href={route("admin.questions.index")}
+                                    className="w-full sm:w-auto bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-gray-900 font-bold py-3 px-6 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+                                >
+                                    <ArrowLeft className="w-5 h-5" />
+                                    Batal & Kembali
+                                </Link>
 
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95"
-                                    >
-                                        <Save className="w-4 h-4" />
-                                        {processing
-                                            ? "Menyimpan Perubahan..."
-                                            : "Simpan Perubahan"}
-                                    </button>
-                                </div>
-                            </form>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-95"
+                                >
+                                    <Save className="w-5 h-5" />
+                                    {processing
+                                        ? "Menyimpan..."
+                                        : "Simpan Perubahan"}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </AuthenticatedLayout>

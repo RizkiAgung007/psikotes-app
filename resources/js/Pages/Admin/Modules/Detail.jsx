@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Hash, Info, Layers } from "lucide-react";
 import React from "react";
 
 export default function Detail({ auth, module }) {
@@ -11,13 +11,18 @@ export default function Detail({ auth, module }) {
                 <div className="flex items-center gap-4">
                     <Link
                         href={route("admin.categories.index")}
-                        className="p-2 bg-white rounded-full text-gray-500 hover:text-gray-800 border shadow-sm"
+                        className="p-2 bg-white rounded-lg text-gray-400 hover:text-indigo-600 border border-gray-200 shadow-sm transition-all"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h2 className="font-semibold text-xl text-gray-800">
-                        Detail Modul: {module.name}
-                    </h2>
+                    <div>
+                        <h2 className="font-bold text-xl text-gray-800 leading-tight">
+                            Detail Modul
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {module.name}
+                        </p>
+                    </div>
                 </div>
             }
         >
@@ -29,39 +34,59 @@ export default function Detail({ auth, module }) {
                     {module.categories.map((cat) => (
                         <div
                             key={cat.id}
-                            className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200"
+                            className="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100"
                         >
                             {/* Judul */}
-                            <div className="bg-indigo-50 px-6 py-4 border-b border-indigo-100">
-                                <h3 className="text-lg font-bold text-indigo-900">
-                                    Kategori: {cat.name} - ({cat.code})
-                                </h3>
+                            <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-200 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-white p-2 rounded-lg border border-gray-200 text-gray-600 shadow-sm">
+                                        <Layers className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-800">
+                                        {cat.name}
+                                    </h3>
+                                </div>
+                                <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-bold border border-indigo-100 flex items-center gap-1">
+                                    <Hash className="w-3 h-3" />
+                                    {cat.code}
+                                </span>
                             </div>
 
                             {/* Isi Interpretasi */}
-                            <div>
+                            <div className="p-6">
                                 {cat.interpretations.length > 0 ? (
-                                    cat.interpretations.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="flex gap-4 p-4 border rounded-lg bg-gray-50"
-                                        >
-                                            <div className="flex-shrink-0">
-                                                <span className="bg-white border border-gray-300 font-bold px-3 py-1 rounded text-sm">
-                                                    Rank {item.rank}
-                                                </span>
+                                    <div className="space-y-4">
+                                        {cat.interpretations.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="flex gap-5 p-5 rounded-xl border border-gray-100 bg-white hover:border-indigo-100 hover:shadow-sm transition-all"
+                                            >
+                                                <div className="flex-shrink-0">
+                                                    <div className="w-14 h-14 flex flex-col items-center justify-center bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-700">
+                                                        <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">
+                                                            Rank
+                                                        </span>
+                                                        <span className="text-2xl font-bold leading-none">
+                                                            {item.rank}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-grow">
+                                                    <p className="text-gray-600 leading-relaxed text-justify text-sm sm:text-base">
+                                                        {item.description}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-gray-700 leading-relaxed text-justify">
-                                                    {item.description}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
+                                        ))}
+                                    </div>
                                 ) : (
-                                    <p className="text-gray-400 italic">
-                                        Belum ada data interpretasi.
-                                    </p>
+                                    <div className="text-center py-10 bg-gray-50/50 rounded-xl border border-dashed border-gray-300">
+                                        <Info className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                        <p className="text-gray-500 font-medium">
+                                            Belum ada data interpretasi untuk
+                                            kategori ini.
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                         </div>

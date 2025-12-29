@@ -1,8 +1,8 @@
-import ExamFooter from "@/Components/Exam/ExamFooter";
-import QuestionCard from "@/Components/Exam/QuestionCard";
+import ExamFooter from "@/Components/Public/ExamFooter"; // Sesuaikan path jika perlu
+import QuestionCard from "@/Components/Public/QuestionCard"; // Sesuaikan path jika perlu
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm } from "@inertiajs/react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Clock, FileText } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 export default function Show({ auth, test, questions, remaining_time }) {
@@ -96,29 +96,41 @@ export default function Show({ auth, test, questions, remaining_time }) {
         post(route("exam.submit", test.id));
     };
 
-    const isWarn = timeLeft < 300;
+    const isWarn = timeLeft < 300; // Warning jika sisa waktu < 5 menit
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                            {test.module.name}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            Berikan penilaian untuk setiap pernyataan di bawah ini.
-                        </p>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-200 text-indigo-600">
+                            <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-xl text-gray-900 leading-tight">
+                                {test.module.name}
+                            </h2>
+                            <p className="text-sm text-gray-500 font-medium">
+                                Silakan berikan penilaian untuk setiap
+                                pernyataan.
+                            </p>
+                        </div>
                     </div>
+
                     {/* Badge Progress */}
                     <div
-                        className={`px-4 py-2 rounded-full text-sm font-bold border transition-colors ${
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border flex items-center gap-2 shadow-sm transition-all ${
                             isAllAnswered
-                                ? "bg-green-100 text-green-700 border-green-200"
-                                : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-white text-gray-600 border-gray-200"
                         }`}
                     >
+                        <div
+                            className={`w-2 h-2 rounded-full ${
+                                isAllAnswered ? "bg-green-500" : "bg-gray-400"
+                            }`}
+                        />
                         Terisi: {answeredCount} / {totalItemsToRate} Item
                     </div>
                 </div>
@@ -126,15 +138,23 @@ export default function Show({ auth, test, questions, remaining_time }) {
         >
             <Head title={`Ujian: ${test.module.name}`} />
 
-            <div className="py-12 pb-32">
-                <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-8 md:py-12 pb-32">
+                <div className="max-w-5xl mx-auto sm:px-6 lg:px-8 px-4">
                     {/* Warning Waktu */}
                     {isWarn && timeLeft > 0 && (
-                        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-center gap-3 animate-pulse">
-                            <AlertTriangle className="text-red-500 w-6 h-6" />
-                            <p className="font-bold text-red-700">
-                                Waktu Hampir Habis!
-                            </p>
+                        <div className="mb-8 bg-red-50 border border-red-100 p-4 rounded-xl shadow-sm flex items-center gap-3 animate-pulse">
+                            <div className="bg-red-100 p-2 rounded-full text-red-600">
+                                <AlertTriangle className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-red-800">
+                                    Waktu Hampir Habis!
+                                </h4>
+                                <p className="text-sm text-red-600">
+                                    Segera selesaikan dan kumpulkan jawaban
+                                    Anda.
+                                </p>
+                            </div>
                         </div>
                     )}
 

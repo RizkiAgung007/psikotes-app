@@ -13,7 +13,7 @@ import React from "react";
 export default function ModuleCard({ module, isAdmin, onToggle }) {
     return (
         <div
-            className={`bg-white rounded-xl shadow-sm border transition-all duration-300 ${
+            className={`bg-white rounded-xl shadow-sm border transition-all duration-300 hover:shadow-md ${
                 module.is_done
                     ? "border-green-200 bg-green-50/30"
                     : !module.is_active && !isAdmin
@@ -21,24 +21,22 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                     : "border-gray-200"
             }`}
         >
-            <div className="p-6">
+            <div className="p-5 sm:p-6">
                 {/* Kartu Modul */}
                 <div className="flex justify-between items-start mb-4">
                     <div
-                        className={`p-3 rounded-lg ${
+                        className={`p-3 rounded-xl shadow-sm ${
                             module.is_done
                                 ? "bg-green-100 text-green-600"
                                 : !module.is_active
-                                ? "bg-red-200 text-gray-500"
+                                ? "bg-red-100 text-red-500"
                                 : "bg-indigo-50 text-indigo-600"
                         }`}
                     >
                         {module.is_done ? (
                             <CheckCircle className="w-6 h-6" />
                         ) : !module.is_active ? (
-                            <div className="text-red-700 border-red-200">
-                                <Lock className="w-6 h-6" />
-                            </div>
+                            <Lock className="w-6 h-6" />
                         ) : (
                             <BookOpen className="w-6 h-6" />
                         )}
@@ -47,7 +45,7 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                     {/* Badge status khusus Admin */}
                     {isAdmin && (
                         <span
-                            className={`text-xs font-bold px-2 py-1 rounded border ${
+                            className={`text-xs font-bold px-3 py-1 rounded-full border ${
                                 module.is_active
                                     ? "bg-green-100 text-green-700 border-green-200"
                                     : "bg-red-100 text-red-700 border-red-200"
@@ -58,18 +56,20 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                     )}
                 </div>
 
-                <h4 className="text-xl font-bold text-gray-900 mb-2">
+                <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 line-clamp-1">
                     {module.name}
                 </h4>
-                <p className="text-gray-500 text-sm line-clamp-2 mb-4 h-10">
+                <p className="text-gray-500 text-sm line-clamp-2 mb-4 h-10 leading-relaxed">
                     {module.description || "Tes Kompetensi."}
                 </p>
 
                 {/* Info Soal */}
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
-                    <div className="flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />{" "}
-                        {module.questions_count} Soal
+                <div className="flex items-center gap-4 text-sm text-gray-500 mb-6 bg-gray-50 p-2 rounded-lg border border-gray-100 w-fit px-3">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-indigo-500" />{" "}
+                        <span className="font-medium">
+                            {module.questions_count} Soal
+                        </span>
                     </div>
                 </div>
 
@@ -79,17 +79,17 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                         <div className="flex gap-2">
                             <button
                                 disabled
-                                className="flex-1 flex justify-center items-center gap-2 bg-gray-100 text-gray-400 font-semibold py-2.5 px-4 rounded-lg cursor-not-allowed border border-gray-200 text-sm"
+                                className="flex-1 flex justify-center items-center gap-2 bg-gray-100 text-gray-400 font-semibold py-2.5 px-4 rounded-xl cursor-not-allowed border border-gray-200 text-sm transition-colors"
                             >
                                 <Eye className="w-4 h-4" /> Preview
                             </button>
 
                             <button
                                 onClick={() => onToggle(module.id)}
-                                className={`flex-1 flex justify-center items-center gap-2 font-bold py-2.5 px-4 rounded-lg transition-all border text-sm ${
+                                className={`flex-1 flex justify-center items-center gap-2 font-bold py-2.5 px-4 rounded-xl transition-all border text-sm shadow-sm active:scale-95 ${
                                     module.is_active
-                                        ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                                        : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+                                        ? "bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                                        : "bg-white text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300"
                                 }`}
                             >
                                 {module.is_active ? (
@@ -104,12 +104,12 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                             </button>
                         </div>
                     ) : (
-                        // User Biasa
+                        /* User Biasa */
                         <>
                             {module.is_done ? (
                                 <button
                                     disabled
-                                    className="w-full flex justify-center items-center gap-2 bg-gray-100 text-gray-500 font-semibold py-2.5 px-4 rounded-lg cursor-not-allowed"
+                                    className="w-full flex justify-center items-center gap-2 bg-green-50 text-green-600 font-bold py-2.5 px-4 rounded-xl cursor-not-allowed border border-green-200 text-sm"
                                 >
                                     <CheckCircle className="w-5 h-5" /> Sudah
                                     Dikerjakan
@@ -117,7 +117,7 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                             ) : !module.is_active ? (
                                 <button
                                     disabled
-                                    className="w-full flex justify-center items-center gap-2 bg-gray-200 text-gray-400 font-semibold py-2.5 px-4 rounded-lg cursor-not-allowed border border-gray-300"
+                                    className="w-full flex justify-center items-center gap-2 bg-gray-100 text-gray-400 font-bold py-2.5 px-4 rounded-xl cursor-not-allowed border border-gray-200 text-sm"
                                 >
                                     <Lock className="w-5 h-5" /> Belum Dibuka
                                 </button>
@@ -127,7 +127,7 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                                     method="post"
                                     data={{ module_id: module.id }}
                                     as="button"
-                                    className="w-full flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm"
+                                    className="w-full flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-200 active:scale-95 text-sm"
                                 >
                                     <PlayCircle className="w-5 h-5" /> Mulai Tes
                                 </Link>
