@@ -1,13 +1,54 @@
+import ExamFooter from "@/Components/Exam/ExamFooter";
+import QuestionCard from "@/Components/Exam/QuestionCard";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm } from "@inertiajs/react";
-import { Save } from "lucide-react";
-import React from "react";
+import { AlertTriangle } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-export default function Show({ auth, test, questions }) {
-    // State jawaban: { option_id: score }
+export default function Show({ auth, test, questions, remaining_time }) {
+    // State timer
+    const [timeLeft, setTimeLeft] = useState(remaining_time);
+
+    // State jawaban
     const { data, setData, post, processing } = useForm({
         answers: {},
     });
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const intervalId = setInterval(() => {
+            setTimeLeft((prevTime) => {
+                if (prevTime <= 1) {
+                    clearInterval(intervalId);
+                    handleAutoSubmit();
+                    return 0;
+                }
+                return prevTime - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // Fungsi auto submit
+    const handleAutoSubmit = () => {
+        post(route("exam.submit", test.id), {
+            replace: true,
+        });
+    };
+
+    // Helper format waktu
+    const formatTime = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+
+        if (h > 0) {
+            return `${h}:${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+        }
+        return `${m}:${s < 10 ? "0" : ""}${s}`;
+    };
 
     // Handle Rating
     const handleRatingChange = (question, currentOptionId, newScore) => {
@@ -55,6 +96,8 @@ export default function Show({ auth, test, questions }) {
         post(route("exam.submit", test.id));
     };
 
+    const isWarn = timeLeft < 300;
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -65,8 +108,7 @@ export default function Show({ auth, test, questions }) {
                             {test.module.name}
                         </h2>
                         <p className="text-sm text-gray-500">
-                            Berikan penilaian untuk setiap pernyataan di bawah
-                            ini.
+                            Berikan penilaian untuk setiap pernyataan di bawah ini.
                         </p>
                     </div>
                     {/* Badge Progress */}
@@ -86,187 +128,39 @@ export default function Show({ auth, test, questions }) {
 
             <div className="py-12 pb-32">
                 <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
+                    {/* Warning Waktu */}
+                    {isWarn && timeLeft > 0 && (
+                        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r shadow-sm flex items-center gap-3 animate-pulse">
+                            <AlertTriangle className="text-red-500 w-6 h-6" />
+                            <p className="font-bold text-red-700">
+                                Waktu Hampir Habis!
+                            </p>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit}>
                         <div className="space-y-8">
-                            {questions.map((question, qIndex) => {
-                                {
-                                    /* Maksimal Skala */
-                                }
-                                const maxScale = question.options.length;
-                                const dynamicScale = Array.from(
-                                    { length: maxScale },
-                                    (_, i) => i + 1
-                                );
-
-                                return (
-                                    <div
-                                        key={question.id}
-                                        className="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100"
-                                    >
-                                        {/* Header Pertanyaan */}
-                                        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex gap-3 items-start">
-                                            <span className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm">
-                                                {qIndex + 1}
-                                            </span>
-                                            <h3 className="text-gray-900 font-bold text-lg leading-snug pt-1">
-                                                {question.question_text}
-                                            </h3>
-                                        </div>
-
-                                        {/* List Opsi */}
-                                        <div className="divide-y divide-gray-50">
-                                            {question.options.map((option) => (
-                                                <div
-                                                    key={option.id}
-                                                    className="p-4 md:p-6 hover:bg-gray-50/50 transition-colors"
-                                                >
-                                                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-                                                        {/* Teks Pernyataan */}
-                                                        <div className="flex-1 min-w-[300px]">
-                                                            <p className="text-gray-700 font-medium">
-                                                                {
-                                                                    option.option_text
-                                                                }
-                                                            </p>
-                                                        </div>
-
-                                                        {/* Tombol Rate */}
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            {dynamicScale.map(
-                                                                (
-                                                                    scoreValue
-                                                                ) => {
-                                                                    const isSelected =
-                                                                        data
-                                                                            .answers[
-                                                                            option
-                                                                                .id
-                                                                        ] ===
-                                                                        scoreValue;
-                                                                    const isTakenByOther =
-                                                                        question.options.some(
-                                                                            (
-                                                                                opt
-                                                                            ) =>
-                                                                                opt.id !==
-                                                                                    option.id &&
-                                                                                data
-                                                                                    .answers[
-                                                                                    opt
-                                                                                        .id
-                                                                                ] ===
-                                                                                    scoreValue
-                                                                        );
-
-                                                                    return (
-                                                                        <label
-                                                                            key={
-                                                                                scoreValue
-                                                                            }
-                                                                            className="cursor-pointer relative"
-                                                                        >
-                                                                            <input
-                                                                                type="radio"
-                                                                                name={`option_${option.id}`}
-                                                                                value={
-                                                                                    scoreValue
-                                                                                }
-                                                                                checked={
-                                                                                    isSelected
-                                                                                }
-                                                                                onChange={() =>
-                                                                                    handleRatingChange(
-                                                                                        question,
-                                                                                        option.id,
-                                                                                        scoreValue
-                                                                                    )
-                                                                                }
-                                                                                className="sr-only"
-                                                                            />
-
-                                                                            {/* Tombol */}
-                                                                            <div
-                                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm border transition-all duration-200
-                                                                            ${
-                                                                                isSelected
-                                                                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-md scale-110 z-10"
-                                                                                    : isTakenByOther
-                                                                                    ? "bg-gray-100 border-gray-200 text-gray-300"
-                                                                                    : "bg-white border-gray-200 text-gray-400 hover:border-indigo-300 hover:text-indigo-500"
-                                                                            }
-                                                                        `}
-                                                                            >
-                                                                                {" "}
-                                                                                {
-                                                                                    scoreValue
-                                                                                }
-                                                                            </div>
-                                                                        </label>
-                                                                    );
-                                                                }
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            {questions.map((question, qIndex) => (
+                                <QuestionCard
+                                    key={question.id}
+                                    question={question}
+                                    index={qIndex}
+                                    answers={data.answers}
+                                    onRatingChange={handleRatingChange}
+                                />
+                            ))}
                         </div>
 
-                        {/* Footer */}
-                        <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
-                            <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
-                                <div className="hidden md:flex flex-col">
-                                    <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">
-                                        Progress
-                                    </span>
-                                    <span className="text-sm font-semibold text-gray-700">
-                                        {answeredCount} / {totalItemsToRate}{" "}
-                                        Item Dinilai
-                                    </span>
-                                </div>
-
-                                <div className="flex-1 flex gap-4 items-center justify-end">
-                                    <div className="hidden sm:block w-32 md:w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-500 ${
-                                                isAllAnswered
-                                                    ? "bg-green-500"
-                                                    : "bg-indigo-500"
-                                            }`}
-                                            style={{
-                                                width: `${
-                                                    (answeredCount /
-                                                        totalItemsToRate) *
-                                                    100
-                                                }%`,
-                                            }}
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
-                                            isAllAnswered
-                                                ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                                                : "bg-gray-800 hover:bg-gray-700"
-                                        }`}
-                                    >
-                                        {processing ? (
-                                            "Menyimpan..."
-                                        ) : (
-                                            <>
-                                                <Save className="w-5 h-5" />
-                                                <span>Kirim Jawaban</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Footer Component */}
+                        <ExamFooter
+                            timeLeft={timeLeft}
+                            formatTime={formatTime}
+                            isWarn={isWarn}
+                            answeredCount={answeredCount}
+                            totalItemsToRate={totalItemsToRate}
+                            isAllAnswered={isAllAnswered}
+                            processing={processing}
+                        />
                     </form>
                 </div>
             </div>

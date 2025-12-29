@@ -9,7 +9,7 @@ class Module extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description'];
+    protected $guarded = [];
 
     /**
      * Relation one to many

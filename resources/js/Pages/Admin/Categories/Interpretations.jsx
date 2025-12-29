@@ -1,3 +1,4 @@
+import InterpretationFormItem from "@/Components/Category/InterpretationFormItem";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { ArrowLeft, Info, Save } from "lucide-react";
@@ -38,7 +39,7 @@ export default function Interpretations({
     const handleDescriptionChange = (index, value) => {
         const updatedInterpretations = [...data.interpretations];
         updatedInterpretations[index].description = value;
-        setData("Interpretations", updatedInterpretations);
+        setData("interpretations", updatedInterpretations);
     };
 
     return (
@@ -97,34 +98,15 @@ export default function Interpretations({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Looping input berdasarkan rank */}
                         {data.interpretations.map((item, index) => (
-                            <div
+                            <InterpretationFormItem
                                 key={item.rank}
-                                className="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 p-6"
-                            >
-                                <div className="flex justify-between items-center mb-3">
-                                    <label className="block font-bold text-gray-800 text-lg">
-                                        Jika Kategori ini berada di{" "}
-                                        <span className="text-indigo-600 decoration-indigo-300">
-                                            {" "}
-                                            Posisi #{item.rank}
-                                        </span>
-                                    </label>
-                                </div>
-
-                                <textarea
-                                    value={item.description}
-                                    onChange={(e) =>
-                                        handleDescriptionChange(
-                                            index,
-                                            e.target.value
-                                        )
-                                    }
-                                    rows="4"
-                                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-all"
-                                    placeholder={`Masukkan penjelasan jika ${category.name} berada di urutan ke-${item.rank}...`}
-                                    required
-                                />
-                            </div>
+                                rank={item.rank}
+                                categoryName={category.name}
+                                value={item.description}
+                                onChange={(val) =>
+                                    handleDescriptionChange(index, val)
+                                }
+                            />
                         ))}
 
                         <div className="flex justify-end sticky bottom-4">

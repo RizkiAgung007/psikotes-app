@@ -34,4 +34,16 @@ class TestResultController extends Controller
             'testResult' => $testResult
         ]);
     }
+
+    /**
+     * Mereset hasil tes dengan soft delete
+     */
+    public function destroy($id)
+    {
+        $testResult = UserTest::findOrFail($id);
+
+        $testResult->delete();
+
+        return redirect()->back()->with('message', 'Hasil tes berhasil direset');
+    }
 }

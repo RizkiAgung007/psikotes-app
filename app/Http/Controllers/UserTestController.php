@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\CategoryInterpretation;
 use App\Models\Module;
 use App\Models\Option;
 use App\Models\UserAnswer;
 use App\Models\UserTest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +28,8 @@ class UserTestController extends Controller
                 ->with(['userTests' => function ($q) use ($userId) {
                     $q->where('user_id', $userId)->latest();
                 }])->get()->map(function ($module) {
-                    $module->is_done = $module->userTests->whereNotNull('finished_at')->isNotEmpty();
+                    $module->is_done = $module->userTests->whereNotNull('finished_at')
+                    ->isNotEmpty();
                     return $module;
                 });
 
@@ -47,8 +50,9 @@ class UserTestController extends Controller
         $userId = Auth::id();
 
         // Mengecek apakah user memiliki sesi test yang belum selesai
-        $existingTest = UserTest::where('user_id', $userId)->where('module_id', $request->module_id)
-                                ->whereNull('finished_at')->first();
+        $existingTest = UserTest::where('user_id', $userId)
+                            ->where('module_id', $request->module_id)
+                            ->whereNull('finished_at')->first();
 
         if ($existingTest) {
             return redirect()->route('exam.show', $existingTest->id);
@@ -78,12 +82,23 @@ class UserTestController extends Controller
 
         // Jika sudah selesai redirect ke halaman hasil
         if ($test->finished_at) {
-            return redirect()->route('exam.result', $test->id)->with('message', 'Tes ini sudah selesai');
+            return redirect()->route('exam.result', $test->id)
+                            ->with('message', 'Tes ini sudah selesai');
+        }
+
+        $startedAt = Carbon::parse($test->started_at);
+        $timeLimitMinutes = $test->module->time_limit ?? 10; // Waktu diambil dari modul
+        $deadline = $startedAt->copy()->addMinute($timeLimitMinutes);
+        $remainingSeconds = now()->diffInSeconds($deadline, false); // Hitung selisih detik antara saat ini dan deadline
+
+        if ($remainingSeconds < 0) {
+            $remainingSeconds = 0;
         }
 
         return Inertia::render('Exam/Show', [
-            'test'      => $test,
-            'questions' => $test->module->questions
+            'test'           => $test,
+            'questions'      => $test->module->questions,
+            'remaining_time' => (int) $remainingSeconds
         ]);
     }
 
@@ -100,40 +115,51 @@ class UserTestController extends Controller
 
         // Simpan Jawaban
         DB::transaction(function () use ($request, $test) {
-            foreach ($request->answers as $optionId => $score) {
-                $option = Option::find($optionId);
 
-                if ($option) {
-                    UserAnswer::create([
-                        'user_test_id'  => $test->id,
-                        'questions_id'   => $option->question_id,
-                        'option_id'     => $optionId,
-                        'score'         => $score,
-                    ]);
+            if ($request->answers && count($request->answers) > 0) {
+                foreach ($request->answers as $optionId => $score) {
+                    $option = Option::find($optionId);
+
+                    if ($option) {
+                        UserAnswer::updateOrCreate(
+                            [
+                                'user_test_id'  => $test->id,
+                                'option_id'     => $optionId,
+                            ],
+                            [
+                                'questions_id'  => $option->question_id,
+                                'score'         => $score,
+                            ]
+                        );
+                    }
                 }
             }
 
-            $answers = UserAnswer::with(['option.category'])->where('user_test_id', $test->id)->get();
+            $allCategories = Category::all();
+            $groupedStats = [];
 
-            $groupStats = [];
+            foreach ($allCategories as $cat) {
+                $groupedStats[$cat->id] = [
+                    'id'    => $cat->id,
+                    'name'  => $cat->name,
+                    'code'  => $cat->code,
+                    'score' => 0
+                ];
+            }
+
+            $answers = UserAnswer::with(['option.category'])
+                        ->where('user_test_id', $test->id)->get();
 
             foreach ($answers as $ans) {
                 if ($ans->option && $ans->option->category) {
                     $catId = $ans->option->category->id;
-                    $catName = $ans->option->category->name;
-                    $catCode = $ans->option->category->code;
 
-                    if (!isset($groupedStats[$catId])) {
-                        $groupedStats[$catId] = [
-                            'id' => $catId,
-                            'name' => $catName,
-                            'code' => $catCode,
-                            'score' => 0
-                        ];
+                    if (isset($groupedStats[$catId])) {
+                        $groupedStats[$catId]['score'] += $ans->score;
                     }
-                    $groupedStats[$catId]['score'] += $ans->score;
                 }
             }
+
 
             // Ubah ke Array Biasa & Sorting (Ranking)
             $rankedResults = array_values($groupedStats);
@@ -152,12 +178,14 @@ class UserTestController extends Controller
                                     ->where('rank', $rank)
                                     ->first();
 
-                $result['description'] = $interpretation ? $interpretation->description : "Belum ada penjelasan untuk peringkat ini.";
+                $result['description'] = $interpretation
+                                        ? $interpretation->description
+                                        : "Belum ada penjelasan untuk peringkat ini.";
             }
 
             $test->update([
                 'finished_at' => now(),
-                'result'      => json_encode($rankedResults) 
+                'result'      => json_encode($rankedResults)
             ]);
         });
 
@@ -181,6 +209,20 @@ class UserTestController extends Controller
         return Inertia::render('Exam/Result', [
             'test'    => $test,
             'results' => $results
+        ]);
+    }
+
+    /**
+     * Menampilkan history user
+     */
+    public function history()
+    {
+        $histories = UserTest::with('module')->where('user_id', Auth::id())
+                    ->whereNotNull('finished_at')
+                    ->latest()->get();
+
+        return Inertia::render('History', [
+            'histories' => $histories
         ]);
     }
 }

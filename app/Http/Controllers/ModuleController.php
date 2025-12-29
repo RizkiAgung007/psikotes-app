@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Module;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ModuleController extends Controller
@@ -24,11 +25,16 @@ class ModuleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'  => 'required|string|max:255|unique:modules,name',
+            'name'          => 'required|string|max:255|unique:modules,name',
+            'description'   => 'nullable|string',
+            'time_limit'    => 'required|integer|min:1'
         ]);
 
         Module::create([
-            'name' => $request->name
+            'name'          => $request->name,
+            'description'   => $request->description,
+            'time_limit'    => $request->time_limit,
+            'is_active'     => true
         ]);
 
         return redirect()->back()->with('message', 'Modul berhasil dibuat.');
@@ -68,11 +74,15 @@ class ModuleController extends Controller
     public function update(Request $request, Module $module)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:modules,name' . $module->id
+            'name'          => ['required', 'string', 'max:255', Rule::unique('modules', 'name')->ignore($module->id)],
+            'description'   => 'nullable|string',
+            'time_limit'    => 'required|integer|min:1'
         ]);
 
         $module->update([
-            'name' => $request->name
+            'name'          => $request->name,
+            'description'   => $request->description,
+            'time_limit'    => $request->time_limit
         ]);
 
         return redirect()->back()->with('message', 'Modul berhasil diperbarui.');
@@ -85,5 +95,19 @@ class ModuleController extends Controller
     {
         $module->delete();
         return redirect()->back()->with('message', 'Modul berhasil dihapus.');
+    }
+
+    /**
+     * Tombol kunci modul
+     */
+    public function padlock($id)
+    {
+        $module = Module::findOrFail($id);
+
+        $module->is_active = !$module->is_active;
+
+        $module->save();
+
+        return back()->with('message', 'Status modul berhasil dirubah');
     }
 }

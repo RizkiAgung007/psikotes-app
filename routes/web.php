@@ -19,9 +19,15 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', [UserTestController::class, 'index'])
-    ->middleware(['auth', 'verified', 'role:user'])
-    ->name('dashboard');
+Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+    Route::get('/dashboard', [UserTestController::class, 'index'])->name('dashboard');
+    Route::get('/history', [UserTestController::class, 'history'])->name('history');
+});
+// Route::get('/dashboard', [UserTestController::class, 'index'])
+//     ->middleware(['auth', 'verified', 'role:user'])
+//     ->name('dashboard');
+// Route::get('/history', [UserTestController::class, 'history'])->name('history');
+
 
 Route::post('/exam/start', [UserTestController::class, 'store'])->name('exam.start');
 Route::get('/exam/{id}', [UserTestController::class, 'show'])->name('exam.show');
@@ -38,11 +44,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('questions', QuestionController::class);
     Route::resource('modules', ModuleController::class);
     Route::get('/modules/{id}/detail', [ModuleController::class, 'detail'])->name('modules.detail');
+    Route::patch('/modules/{id}/padlock', [ModuleController::class, 'padlock'])->name('modules.padlock');
     Route::resource('categories', CategoryController::class);
     Route::get('categories/{category}/interpretations', [CategoryController::class, 'editInterpretations'])->name('categories.interpretations');
     Route::post('categories/{category}/interpretations', [CategoryController::class, 'updateInterpretations'])->name('categories.interpretations.update');
     Route::get('/results', [TestResultController::class, 'index'])->name('results.index');
     Route::get('/results/{id}', [TestResultController::class, 'show'])->name('results.show');
+    Route::delete('/results/{id}', [TestResultController::class, 'destroy'])->name('results.destroy');
 });
 
 require __DIR__.'/auth.php';
