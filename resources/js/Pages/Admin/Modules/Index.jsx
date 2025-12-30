@@ -5,7 +5,7 @@ import ModuleList from "@/Components/Module/ModuleList";
 import SecondaryButton from "@/Components/SecondaryButton";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, useForm } from "@inertiajs/react";
-import { AlertTriangle, Layers } from "lucide-react";
+import { AlertTriangle, Box } from "lucide-react";
 import React, { useState } from "react";
 
 export default function Index({ auth, modules }) {
@@ -84,30 +84,35 @@ export default function Index({ auth, modules }) {
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex items-center gap-2">
-                    <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-200">
-                        <Layers className="w-5 h-5 text-indigo-600" />
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-200 text-indigo-600">
+                        <Box className="w-6 h-6" />
                     </div>
-                    <h2 className="font-bold text-xl text-gray-800 leading-tight">
-                        Kelola Modul
-                    </h2>
+                    <div>
+                        <h2 className="font-bold text-xl text-gray-900 leading-tight">
+                            Kelola Modul
+                        </h2>
+                        <p className="text-sm text-gray-500 font-medium">
+                            Atur modul penilaian dan durasi pengerjaan.
+                        </p>
+                    </div>
                 </div>
             }
         >
             <Head title="Kelola Modul" />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* List Component */}
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 px-4">
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        {/* List Component (Kiri) */}
                         <ModuleList
                             modules={modules}
                             onEdit={handleEdit}
                             onDelete={openModal}
                         />
 
-                        {/* Form Component */}
-                        <div className="w-full md:w-1/3">
+                        {/* Form Component (Kanan - Sticky) */}
+                        <div className="w-full lg:w-1/3">
                             <ModuleForm
                                 data={data}
                                 setData={setData}
@@ -125,29 +130,34 @@ export default function Index({ auth, modules }) {
             {/* Modal hapus */}
             <Modal show={confirmationDelete} onClose={closeModal}>
                 <div className="p-6">
-                    <div className="flex items-center gap-3 text-red-600 mb-4">
-                        <div className="bg-red-100 p-2 rounded-full">
+                    <div className="flex items-center gap-4 mb-5">
+                        <div className="bg-red-100 p-3 rounded-full text-red-600 shrink-0">
                             <AlertTriangle className="w-6 h-6" />
                         </div>
-                        <h2 className="text-lg font-bold text-gray-900">
-                            Konfirmasi Penghapusan
-                        </h2>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">
+                                Konfirmasi Penghapusan
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Tindakan ini berisiko.
+                            </p>
+                        </div>
                     </div>
 
-                    <p className="mt-1 text-sm text-gray-600 leading-relaxed">
-                        Apakah Anda yakin ingin menghapus module ini?
+                    <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                        Apakah Anda yakin ingin menghapus modul ini?
                         <br />
-                        Data interpretasi dan soal yang terkait dengan module
-                        ini mungkin akan terpengaruh.
+                        Data interpretasi, kategori, dan soal yang terkait
+                        dengan modul ini mungkin akan terpengaruh atau hilang.
                     </p>
 
-                    <div className="mt-6 flex justify-end gap-3">
+                    <div className="flex justify-end gap-3">
                         <SecondaryButton onClick={closeModal}>
                             Batal
                         </SecondaryButton>
 
                         <DangerButton onClick={deleteModal}>
-                            Ya, Hapus Module
+                            Ya, Hapus Modul
                         </DangerButton>
                     </div>
                 </div>
