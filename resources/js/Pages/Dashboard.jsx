@@ -15,6 +15,11 @@ export default function Dashboard({ auth, modules }) {
         );
     };
 
+    const visibleModules = modules.filter((module) => {
+        if (isAdmin) return true; 
+        return module.is_active; 
+    });
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -36,8 +41,7 @@ export default function Dashboard({ auth, modules }) {
                             )}
                         </div>
                         <p className="text-sm text-gray-500 font-medium">
-                            Selamat datang kembali,{" "}
-                            {auth.user.name.split(" ")[0]}!
+                            Selamat datang kembali, {auth.user.name.split(" ")[0]}!
                         </p>
                     </div>
                 </div>
@@ -55,7 +59,6 @@ export default function Dashboard({ auth, modules }) {
                                 : "bg-gradient-to-br from-indigo-600 to-violet-600"
                         }`}
                     >
-                        {/* Background Decoration */}
                         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none"></div>
                         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -67,8 +70,8 @@ export default function Dashboard({ auth, modules }) {
                             </h3>
                             <p className="text-lg font-medium opacity-90 leading-relaxed max-w-2xl">
                                 {isAdmin
-                                    ? "Ini adalah tampilan yang dilihat oleh peserta. Anda tidak dapat mengerjakan tes di mode ini, namun Anda dapat membuka/mengunci modul."
-                                    : "Selamat datang di platform asesmen kompetensi. Silakan pilih modul tes yang tersedia di bawah ini untuk memulai."}
+                                    ? "Anda dapat melihat semua modul (termasuk yang terkunci). Gunakan tombol kunci untuk menyembunyikan modul dari peserta."
+                                    : "Selamat datang di platform asesmen kompetensi. Silakan pilih modul tes yang tersedia di bawah ini."}
                             </p>
                         </div>
                     </div>
@@ -83,10 +86,10 @@ export default function Dashboard({ auth, modules }) {
                         </h3>
                     </div>
 
-                    {/* Grid Modul */}
+                    {/* Grid Modul - Gunakan visibleModules */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {modules.length > 0 ? (
-                            modules.map((module) => (
+                        {visibleModules.length > 0 ? (
+                            visibleModules.map((module) => (
                                 <ModuleCard
                                     key={module.id}
                                     module={module}
@@ -95,15 +98,17 @@ export default function Dashboard({ auth, modules }) {
                                 />
                             ))
                         ) : (
-                            <div className="col-span-full py-16 text-center bg-white rounded-xl border border-dashed border-gray-300">
-                                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <BookOpen className="w-8 h-8 text-gray-400" />
+                            <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+                                <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <BookOpen className="w-10 h-10 text-gray-400" />
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-900">
-                                    Belum ada modul
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                    Tidak Ada Modul Tersedia
                                 </h3>
-                                <p className="text-gray-500 mt-1">
-                                    Belum ada modul tes yang tersedia saat ini.
+                                <p className="text-gray-500 max-w-sm mx-auto">
+                                    {isAdmin
+                                        ? "Belum ada modul yang dibuat."
+                                        : "Saat ini tidak ada tes yang aktif untuk Anda kerjakan."}
                                 </p>
                             </div>
                         )}
