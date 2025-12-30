@@ -29,15 +29,15 @@ export default function Dashboard({ auth, modules }) {
                         <LayoutDashboard className="w-6 h-6" />
                     </div>
                     <div>
-                        <div className="flex items-center jusb gap-3">
-                            <h2 className="font-bold text-xl text-gray-900 leading-tight">
-                                Dashboard Peserta
-                            </h2>
-                            {isAdmin && (
-                                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-amber-200">
-                                    <ShieldAlert className="w-3 h-3" />
-                                    Mode Admin Preview
-                                </span>
+                        <div className="flex items-center gap-3">
+                            {isAdmin ? (
+                                <h2 className="font-bold text-xl text-gray-900 leading-tight">
+                                    Dashboard Admin
+                                </h2>
+                            ) : (
+                                <h2 className="font-bold text-xl text-gray-900 leading-tight">
+                                    Dashboard Peserta
+                                </h2>
                             )}
                         </div>
                         <p className="text-sm text-gray-500 font-medium">
