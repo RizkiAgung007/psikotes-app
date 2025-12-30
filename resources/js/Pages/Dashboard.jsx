@@ -29,7 +29,7 @@ export default function Dashboard({ auth, modules }) {
                         <LayoutDashboard className="w-6 h-6" />
                     </div>
                     <div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center jusb gap-3">
                             <h2 className="font-bold text-xl text-gray-900 leading-tight">
                                 Dashboard Peserta
                             </h2>
