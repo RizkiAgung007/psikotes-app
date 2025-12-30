@@ -11,18 +11,18 @@ export default function QuestionCard({
     const dynamicScale = Array.from({ length: maxScale }, (_, i) => i + 1);
 
     return (
-        <div className="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-200 transition-all hover:shadow-md">
+        <div className="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100 transition-all duration-300 hover:shadow-md">
             {/* Header Pertanyaan */}
-            <div className="bg-gray-50/50 px-6 py-5 border-b border-gray-100 flex gap-4 items-start">
-                <div className="flex-shrink-0 w-10 h-10 bg-white border border-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+            <div className="bg-white px-6 py-6 border-b border-gray-100 flex gap-5 items-start">
+                <div className="flex-shrink-0 w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-bold text-xl shadow-sm border border-indigo-100">
                     {index + 1}
                 </div>
                 <div>
-                    <h3 className="text-gray-900 font-bold text-lg leading-snug">
+                    <h3 className="text-gray-900 font-bold text-lg sm:text-xl leading-snug">
                         {question.question_text}
                     </h3>
-                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-400 font-medium">
-                        <HelpCircle className="w-3 h-3" />
+                    <div className="flex items-center gap-1.5 mt-2 text-sm text-gray-500 font-medium bg-gray-50 w-fit px-3 py-1 rounded-lg border border-gray-100">
+                        <HelpCircle className="w-4 h-4 text-indigo-500" />
                         <span>
                             Urutkan prioritas (1 - {maxScale}) untuk setiap opsi
                             di bawah.
@@ -36,12 +36,12 @@ export default function QuestionCard({
                 {question.options.map((option) => (
                     <div
                         key={option.id}
-                        className="p-5 md:p-6 hover:bg-indigo-50/10 transition-colors"
+                        className="p-5 sm:p-7 hover:bg-slate-50 transition-colors duration-200"
                     >
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                             {/* Teks Pernyataan */}
                             <div className="flex-1 min-w-[200px]">
-                                <p className="text-gray-700 font-medium text-base leading-relaxed">
+                                <p className="text-gray-700 font-medium text-base sm:text-lg leading-relaxed">
                                     {option.option_text}
                                 </p>
                             </div>
@@ -86,21 +86,22 @@ export default function QuestionCard({
                                                 className="sr-only"
                                             />
                                             <div
-                                                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base transition-all duration-200 border-2 ${
+                                                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base transition-all duration-200 border-2 ${
                                                     isSelected
-                                                        ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110 z-10 ring-2 ring-indigo-100 ring-offset-1"
+                                                        ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110 z-10"
                                                         : isTakenByOther
-                                                        ? "bg-gray-50 border-gray-100 text-gray-300 opacity-60"
-                                                        : "bg-white border-gray-200 text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:shadow-sm"
+                                                        ? "bg-gray-50 border-gray-100 text-gray-300 opacity-50"
+                                                        : "bg-white border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-sm hover:-translate-y-0.5"
                                                 }`}
                                             >
                                                 {scoreValue}
                                             </div>
 
-                                            {/* Tooltip sederhana untuk UX jika disabled */}
+                                            {/* Tooltip sederhana jika disabled */}
                                             {isTakenByOther && (
-                                                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                                    Dipakai
+                                                <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-sm z-20">
+                                                    Sudah Dipilih
+                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                                                 </div>
                                             )}
                                         </label>

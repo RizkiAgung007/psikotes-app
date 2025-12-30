@@ -1,8 +1,8 @@
-import ExamFooter from "@/Components/Public/ExamFooter"; // Sesuaikan path jika perlu
-import QuestionCard from "@/Components/Public/QuestionCard"; // Sesuaikan path jika perlu
+import ExamFooter from "@/Components/Exam/ExamFooter";
+import QuestionCard from "@/Components/Exam/QuestionCard";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm } from "@inertiajs/react";
-import { AlertTriangle, Clock, FileText } from "lucide-react";
+import { AlertTriangle, FileText, Timer } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 export default function Show({ auth, test, questions, remaining_time }) {
@@ -55,7 +55,7 @@ export default function Show({ auth, test, questions, remaining_time }) {
         const newAnswers = { ...data.answers };
         newAnswers[currentOptionId] = newScore;
 
-        // Mengecek opsi lain pada pertanyaan yang sama
+        // Mengecek opsi lain pada pertanyaan yang sama agar tidak duplikat skor
         question.options.forEach((opt) => {
             if (opt.id !== currentOptionId) {
                 if (newAnswers[opt.id] === newScore) {
@@ -67,7 +67,7 @@ export default function Show({ auth, test, questions, remaining_time }) {
         setData("answers", newAnswers);
     };
 
-    // Menghitung Progreess
+    // Menghitung Progress
     const totalItemsToRate = questions.reduce(
         (total, q) => total + q.options.length,
         0
@@ -112,8 +112,7 @@ export default function Show({ auth, test, questions, remaining_time }) {
                                 {test.module.name}
                             </h2>
                             <p className="text-sm text-gray-500 font-medium">
-                                Silakan berikan penilaian untuk setiap
-                                pernyataan.
+                                Silakan berikan penilaian prioritas untuk setiap pernyataan.
                             </p>
                         </div>
                     </div>
@@ -122,37 +121,41 @@ export default function Show({ auth, test, questions, remaining_time }) {
                     <div
                         className={`px-4 py-2 rounded-xl text-sm font-bold border flex items-center gap-2 shadow-sm transition-all ${
                             isAllAnswered
-                                ? "bg-green-50 text-green-700 border-green-200"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : "bg-white text-gray-600 border-gray-200"
                         }`}
                     >
                         <div
-                            className={`w-2 h-2 rounded-full ${
-                                isAllAnswered ? "bg-green-500" : "bg-gray-400"
+                            className={`w-2.5 h-2.5 rounded-full ${
+                                isAllAnswered
+                                    ? "bg-emerald-500 animate-pulse"
+                                    : "bg-gray-300"
                             }`}
                         />
-                        Terisi: {answeredCount} / {totalItemsToRate} Item
+                        <span>
+                            Terisi: {answeredCount} / {totalItemsToRate} Item
+                        </span>
                     </div>
                 </div>
             }
         >
             <Head title={`Ujian: ${test.module.name}`} />
 
-            <div className="py-8 md:py-12 pb-32">
+            <div className="py-8 md:py-12 pb-40">
                 <div className="max-w-5xl mx-auto sm:px-6 lg:px-8 px-4">
                     {/* Warning Waktu */}
                     {isWarn && timeLeft > 0 && (
-                        <div className="mb-8 bg-red-50 border border-red-100 p-4 rounded-xl shadow-sm flex items-center gap-3 animate-pulse">
-                            <div className="bg-red-100 p-2 rounded-full text-red-600">
-                                <AlertTriangle className="w-5 h-5" />
+                        <div className="mb-8 bg-red-50 border border-red-100 p-5 rounded-2xl shadow-sm flex items-center gap-4 animate-pulse">
+                            <div className="bg-white p-2.5 rounded-xl text-red-600 shadow-sm border border-red-100">
+                                <AlertTriangle className="w-6 h-6" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-red-800">
+                                <h4 className="font-bold text-red-800 text-lg">
                                     Waktu Hampir Habis!
                                 </h4>
-                                <p className="text-sm text-red-600">
+                                <p className="text-sm text-red-600 font-medium">
                                     Segera selesaikan dan kumpulkan jawaban
-                                    Anda.
+                                    Anda sebelum waktu habis.
                                 </p>
                             </div>
                         </div>

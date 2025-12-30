@@ -1,4 +1,4 @@
-import InterpretationFormItem from "@/Components/Category/InterpretationFormItem"; // Sesuaikan path jika perlu
+import InterpretationFormItem from "@/Components/Category/InterpretationFormItem";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { ArrowLeft, BookOpen, Info, Save } from "lucide-react";
