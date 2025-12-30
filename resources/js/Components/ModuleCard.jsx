@@ -80,7 +80,7 @@ export default function ModuleCard({ module, isAdmin, onToggle }) {
                         <StatusIcon className="w-5 h-5" />
                     </div>
 
-                    {/* Status Text Badge */}
+                    {/* Status Text Badge// */}
                     <span
                         className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${currentStyle.badge}`}
                     >
