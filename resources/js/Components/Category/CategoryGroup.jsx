@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-import { BookOpen, Eye, Layers, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, Eye, Layers, ListOrdered, Pencil, Trash2 } from "lucide-react";
 import React from "react";
 
 export default function CategoryGroup({
@@ -32,10 +32,10 @@ export default function CategoryGroup({
 
                 {/* Tombol ke Detail Modul */}
                 <Link
-                    href={route("admin.modules.show", module.id)}
+                    href={route("admin.modules.detail", module.id)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-xl text-sm font-bold hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all shadow-sm"
                 >
-                    <Eye className="w-4 h-4" /> Lihat Detail Modul
+                    <ListOrdered className="w-4 h-4" /> Lihat Ranking & Detail
                 </Link>
             </div>
 

@@ -109,37 +109,47 @@ class UserTestController extends Controller
     {
         $test = UserTest::where('user_id', Auth::id())->findOrFail($id);
 
+        // Jika sudah selesai tidak bisa akses lagi
         if ($test->finished_at) {
             return redirect()->route('exam.result', $test->id);
         }
 
-        // Simpan Jawaban
         DB::transaction(function () use ($request, $test) {
+            // Simpan jawawaban
+            $inputAnswers = $request->input('answers', []);
 
-            if ($request->answers && count($request->answers) > 0) {
-                foreach ($request->answers as $optionId => $score) {
-                    $option = Option::find($optionId);
+            if (!empty($inputAnswers) && is_array($inputAnswers)) {
+                $optionId = array_keys($inputAnswers);
+                $options = Option::whereIn('id', $optionId)->get()->keyBy   ('id');
 
-                    if ($option) {
+                foreach ($inputAnswers as $optionId => $score) {
+                    if (isset($options[$optionId])) {
+                        $option = $options[$optionId];
+
                         UserAnswer::updateOrCreate(
                             [
                                 'user_test_id'  => $test->id,
-                                'option_id'     => $optionId,
+                                'option_id'     => $optionId
                             ],
                             [
-                                'questions_id'  => $option->question_id,
-                                'score'         => $score,
+                                'questions_id'   => $option->question_id,
+                                'score'         => $score
                             ]
                         );
                     }
                 }
             }
 
+            // Mengambil semua opsi yang ada di db untk soal tes ini
+            $recordAnswers = UserAnswer::with(['option.category'])
+                            ->where('user_test_id', $test->id)->get();
+
+            // Menyiapkan kategori
             $allCategories = Category::all();
-            $groupedStats = [];
+            $groupStats = [];
 
             foreach ($allCategories as $cat) {
-                $groupedStats[$cat->id] = [
+                $groupStats[$cat->id] = [
                     'id'    => $cat->id,
                     'name'  => $cat->name,
                     'code'  => $cat->code,
@@ -147,49 +157,44 @@ class UserTestController extends Controller
                 ];
             }
 
-            $answers = UserAnswer::with(['option.category'])
-                        ->where('user_test_id', $test->id)->get();
-
-            foreach ($answers as $ans) {
+            // Menhitung score berdasarkan data db
+            foreach ($recordAnswers as $ans) {
                 if ($ans->option && $ans->option->category) {
                     $catId = $ans->option->category->id;
-
-                    if (isset($groupedStats[$catId])) {
-                        $groupedStats[$catId]['score'] += $ans->score;
+                    if (isset($groupStats[$catId])) {
+                        $groupStats[$catId]['score'] += $ans->score;
                     }
                 }
             }
 
+            // Rankking
+            $rankedResults = array_values($groupStats);
 
-            // Ubah ke Array Biasa & Sorting (Ranking)
-            $rankedResults = array_values($groupedStats);
-
-            // Urutkan Skor Tertinggi -> Terendah
-            usort($rankedResults, function ($a, $b) {
+            // Sorting tertinggi ke terendah
+            usort ($rankedResults, function ($a, $b) {
                 return $b['score'] <=> $a['score'];
             });
 
-            // Loop hasil ranking, Rank 1 cari penjelasan rank 1, dst.
+            // Mengambil interpretasi
             foreach ($rankedResults as $index => &$result) {
                 $rank = $index + 1;
                 $result['rank'] = $rank;
 
                 $interpretation = CategoryInterpretation::where('category_id', $result['id'])
-                                    ->where('rank', $rank)
-                                    ->first();
+                                    ->where('rank', $rank)->first();
 
                 $result['description'] = $interpretation
-                                        ? $interpretation->description
-                                        : "Belum ada penjelasan untuk peringkat ini.";
+                                            ? $interpretation->description
+                                            : "Belum ada penjelasan untuk rank ini.";
             }
 
             $test->update([
-                'finished_at' => now(),
-                'result'      => json_encode($rankedResults)
+                'finished_at'   => now(),
+                'result'        => json_encode($rankedResults)
             ]);
         });
 
-        return redirect()->route('exam.result', $test->id)->with('message', 'Tes berhasil dikumpulkan');
+        return redirect()->route('exam.result', $test->id)->with('message', 'Tes berhasil dikumpulkan.');
     }
 
     /**

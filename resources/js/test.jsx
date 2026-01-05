@@ -1,163 +1,207 @@
-import CategoryForm from "@/Components/Category/CategoryForm";
-import CategoryGroup from "@/Components/Category/CategoryGroup";
-import DangerButton from "@/Components/DangerButton";
-import Modal from "@/Components/Modal";
-import SecondaryButton from "@/Components/SecondaryButton";
+import ExamFooter from "@/Components/Exam/ExamFooter";
+import QuestionCard from "@/Components/Exam/QuestionCard";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+// 1. TAMBAHKAN IMPORT 'router' DI SINI
 import { Head, router, useForm } from "@inertiajs/react";
-import { AlertTriangle } from "lucide-react";
-import React, { useState } from "react";
+import { AlertTriangle, FileText } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-export default function Index({ auth, categories, modules }) {
-    const [editingCategory, setEditingCategory] = useState(null);
-    const [confirmationDelete, setConfirmationDelete] = useState(false);
-    const [deleteId, setDeleteId] = useState(null);
+export default function Show({ auth, test, questions, remaining_time }) {
+    // State timer
+    const [timeLeft, setTimeLeft] = useState(remaining_time);
 
-    // State & Form Logic
-    const { data, setData, post, put, processing, errors, reset, clearErrors } =
-        useForm({
-            name: "",
-            code: "",
-            module_id: "",
+    // State jawaban
+    const { data, setData, post, processing } = useForm({
+        answers: {},
+    });
+
+    // Ref untuk menyimpan jawaban terbaru agar terbaca oleh Timer
+    const answersRef = useRef(data.answers);
+
+    // Update Ref setiap kali state berubah
+    useEffect(() => {
+        answersRef.current = data.answers;
+    }, [data.answers]);
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const intervalId = setInterval(() => {
+            setTimeLeft((prevTime) => {
+                if (prevTime <= 1) {
+                    clearInterval(intervalId);
+                    // Panggil fungsi auto submit
+                    handleAutoSubmit();
+                    return 0;
+                }
+                return prevTime - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // 2. PERBAIKAN UTAMA DI SINI (Gunakan router.post, bukan post dari useForm)
+    const handleAutoSubmit = () => {
+        // Kita gunakan router.post manual agar bisa memaksa kirim data dari Ref
+        router.post(
+            route("exam.submit", test.id),
+            {
+                answers: answersRef.current, // Kirim isi Ref terbaru
+            },
+            {
+                replace: true,
+            }
+        );
+    };
+
+    // Helper format waktu
+    const formatTime = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+
+        if (h > 0) {
+            return `${h}:${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+        }
+        return `${m}:${s < 10 ? "0" : ""}${s}`;
+    };
+
+    // Handle Rating
+    const handleRatingChange = (question, currentOptionId, newScore) => {
+        const newAnswers = { ...data.answers };
+        newAnswers[currentOptionId] = newScore;
+
+        question.options.forEach((opt) => {
+            if (opt.id !== currentOptionId) {
+                if (newAnswers[opt.id] === newScore) {
+                    delete newAnswers[opt.id];
+                }
+            }
         });
 
-    // Fungsi Submit
+        setData("answers", newAnswers);
+    };
+
+    const totalItemsToRate = questions.reduce(
+        (total, q) => total + q.options.length,
+        0
+    );
+    const answeredCount = Object.keys(data.answers).length;
+    const isAllAnswered = answeredCount === totalItemsToRate;
+
+    // Handle Submit Manual (Tetap gunakan useForm post karena ini dipicu user click)
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (editingCategory) {
-            put(route("admin.categories.update", editingCategory.id), {
-                onSuccess: () => cancelEdit(),
-            });
+
+        if (!isAllAnswered) {
+            if (
+                !confirm(
+                    `Anda baru menilai ${answeredCount} dari ${totalItemsToRate} item. Yakin ingin mengumpulkan?`
+                )
+            ) {
+                return;
+            }
         } else {
-            post(route("admin.categories.store"), {
-                onSuccess: () => reset(),
-            });
+            if (!confirm("Apakah Anda yakin ingin mengumpulkan jawaban ini?")) {
+                return;
+            }
         }
+
+        // Submit manual tetap pakai helper bawaan useForm karena state-nya fresh (bukan closure)
+        post(route("exam.submit", test.id));
     };
 
-    // Fungsi Edit
-    const handleEdit = (category) => {
-        setEditingCategory(category);
-        setData({
-            name: category.name,
-            code: category.code,
-            module_id: category.module_id,
-        });
-        clearErrors();
-    };
-
-    // Fungsi Cancel
-    const cancelEdit = () => {
-        setEditingCategory(null);
-        reset();
-        clearErrors();
-    };
-
-    // Buka modal delete
-    const openModal = (id) => {
-        setDeleteId(id);
-        setConfirmationDelete(true);
-    };
-
-    // Tutup modal delete
-    const closeModal = () => {
-        setConfirmationDelete(false);
-        setDeleteId(null);
-    };
-
-    // Tombol hapus
-    const deleteModal = () => {
-        router.delete(route("admin.categories.destroy", deleteId), {
-            preserveScroll: true,
-            onSuccess: () => {
-                if (editingCategory && editingCategory.id === deleteId) {
-                    cancelEdit();
-                }
-                closeModal();
-            },
-            onFinish: () => closeModal(),
-        });
-    };
+    const isWarn = timeLeft < 300;
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    Kelola Kategori
-                </h2>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-200 text-indigo-600">
+                            <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-xl text-gray-900 leading-tight">
+                                {test.module.name}
+                            </h2>
+                            <p className="text-sm text-gray-500 font-medium">
+                                Silakan berikan penilaian prioritas untuk setiap
+                                pernyataan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border flex items-center gap-2 shadow-sm transition-all ${
+                            isAllAnswered
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : "bg-white text-gray-600 border-gray-200"
+                        }`}
+                    >
+                        <div
+                            className={`w-2.5 h-2.5 rounded-full ${
+                                isAllAnswered
+                                    ? "bg-emerald-500 animate-pulse"
+                                    : "bg-gray-300"
+                            }`}
+                        />
+                        <span>
+                            Terisi: {answeredCount} / {totalItemsToRate} Item
+                        </span>
+                    </div>
+                </div>
             }
         >
-            <Head title="Kelola Kategori" />
+            <Head title={`Ujian: ${test.module.name}`} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Daftar Kategori */}
-                        <div className="flex-1 space-y-8">
-                            {modules.length > 0 ? (
-                                modules.map((module) => (
-                                    <CategoryGroup
-                                        key={module.id}
-                                        module={module}
-                                        categories={categories}
-                                        onEdit={handleEdit}
-                                        onDelete={openModal}
-                                    />
-                                ))
-                            ) : (
-                                <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
-                                    Belum ada modul. Silakan buat Modul terlebih
-                                    dahulu.
-                                </div>
-                            )}
+            <div className="pb-48 pt-12 md:py-32">
+                <div className="max-w-5xl mx-auto sm:px-6 lg:px-8 px-4">
+                    {/* Warning Waktu */}
+                    {isWarn && timeLeft > 0 && (
+                        <div className="mb-8 bg-red-50 border border-red-100 p-5 rounded-2xl shadow-sm flex items-center gap-4 animate-pulse">
+                            <div className="bg-white p-2.5 rounded-xl text-red-600 shadow-sm border border-red-100">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-red-800 text-lg">
+                                    Waktu Hampir Habis!
+                                </h4>
+                                <p className="text-sm text-red-600 font-medium">
+                                    Segera selesaikan dan kumpulkan jawaban Anda
+                                    sebelum waktu habis.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit}>
+                        <div className="space-y-8">
+                            {questions.map((question, qIndex) => (
+                                <QuestionCard
+                                    key={question.id}
+                                    question={question}
+                                    index={qIndex}
+                                    answers={data.answers}
+                                    onRatingChange={handleRatingChange}
+                                />
+                            ))}
                         </div>
 
-                        {/* Form Input */}
-                        <div className="w-full md:w-1/3">
-                            <CategoryForm
-                                data={data}
-                                setData={setData}
-                                errors={errors}
-                                processing={processing}
-                                modules={modules}
-                                editingCategory={editingCategory}
-                                onSubmit={handleSubmit}
-                                onCancel={cancelEdit}
-                            />
-                        </div>
-                    </div>
+                        <ExamFooter
+                            timeLeft={timeLeft}
+                            formatTime={formatTime}
+                            isWarn={isWarn}
+                            answeredCount={answeredCount}
+                            totalItemsToRate={totalItemsToRate}
+                            isAllAnswered={isAllAnswered}
+                            processing={processing}
+                        />
+                    </form>
                 </div>
             </div>
-
-            {/* Modal hapus */}
-            <Modal show={confirmationDelete} onClose={closeModal}>
-                <div className="p-6">
-                    <div className="flex items-center gap-3 text-red-600 mb-4">
-                        <AlertTriangle className="w-8 h-8" />
-                        <h2 className="text-lg font-medium text-gray-900">
-                            Konfirmasi Penghapusan
-                        </h2>
-                    </div>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                        Apakah Anda yakin ingin menghapus kategori ini?
-                        <br />
-                        Data interpretasi dan soal yang terkait dengan kategori
-                        ini mungkin akan terpengaruh.
-                    </p>
-
-                    <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton onClick={closeModal}>
-                            Batal
-                        </SecondaryButton>
-
-                        <DangerButton onClick={deleteModal}>
-                            Ya, Hapus Kategori
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
         </AuthenticatedLayout>
     );
 }

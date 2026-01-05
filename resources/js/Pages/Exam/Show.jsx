@@ -1,9 +1,9 @@
 import ExamFooter from "@/Components/Exam/ExamFooter";
 import QuestionCard from "@/Components/Exam/QuestionCard";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, router, useForm } from "@inertiajs/react";
 import { AlertTriangle, FileText, Timer } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function Show({ auth, test, questions, remaining_time }) {
     // State timer
@@ -13,6 +13,12 @@ export default function Show({ auth, test, questions, remaining_time }) {
     const { data, setData, post, processing } = useForm({
         answers: {},
     });
+
+    const answersRef = useRef(data.answers);
+
+    useEffect(() => {
+        answersRef.current = data.answers;
+    }, [data.answers]);
 
     useEffect(() => {
         if (timeLeft <= 0) return;
@@ -33,7 +39,8 @@ export default function Show({ auth, test, questions, remaining_time }) {
 
     // Fungsi auto submit
     const handleAutoSubmit = () => {
-        post(route("exam.submit", test.id), {
+        router.post(route("exam.submit", test.id), {
+            answers: answersRef.current,
             replace: true,
         });
     };
@@ -112,7 +119,8 @@ export default function Show({ auth, test, questions, remaining_time }) {
                                 {test.module.name}
                             </h2>
                             <p className="text-sm text-gray-500 font-medium">
-                                Silakan berikan penilaian prioritas untuk setiap pernyataan.
+                                Silakan berikan penilaian prioritas untuk setiap
+                                pernyataan.
                             </p>
                         </div>
                     </div>
@@ -141,7 +149,7 @@ export default function Show({ auth, test, questions, remaining_time }) {
         >
             <Head title={`Ujian: ${test.module.name}`} />
 
-            <div className="py-8 md:py-12 pb-40">
+            <div className="pb-48 pt-12 md:py-32">
                 <div className="max-w-5xl mx-auto sm:px-6 lg:px-8 px-4">
                     {/* Warning Waktu */}
                     {isWarn && timeLeft > 0 && (
@@ -154,8 +162,8 @@ export default function Show({ auth, test, questions, remaining_time }) {
                                     Waktu Hampir Habis!
                                 </h4>
                                 <p className="text-sm text-red-600 font-medium">
-                                    Segera selesaikan dan kumpulkan jawaban
-                                    Anda sebelum waktu habis.
+                                    Segera selesaikan dan kumpulkan jawaban Anda
+                                    sebelum waktu habis.
                                 </p>
                             </div>
                         </div>

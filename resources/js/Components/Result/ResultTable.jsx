@@ -70,7 +70,7 @@ export default function ResultTable({ results, onReset }) {
                             results.data.map((item) => (
                                 <tr
                                     key={item.id}
-                                    className="hover:bg-gray-50/80 transition-colors duration-150 group"
+                                    className="hover:bg-gray-50/80 transition-colors duration-150"
                                 >
                                     {/* Tanggal */}
                                     <td className="px-6 py-5 whitespace-nowrap text-gray-600">
@@ -119,7 +119,7 @@ export default function ResultTable({ results, onReset }) {
 
                                     {/* Aksi */}
                                     <td className="px-6 py-5 text-center">
-                                        <div className="flex justify-center items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                        <div className="flex justify-center items-center gap-2">
                                             <Link
                                                 href={route(
                                                     "admin.results.show",

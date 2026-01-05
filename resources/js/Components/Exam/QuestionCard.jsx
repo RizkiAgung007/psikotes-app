@@ -49,11 +49,11 @@ export default function QuestionCard({
                             {/* Tombol Rate */}
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                                 {dynamicScale.map((scoreValue) => {
-                                    // Cek apakah nilai ini dipilih untuk opsi INI
+                                    // Cek apakah nilai ini dipilih untuk opsi ini
                                     const isSelected =
                                         answers[option.id] === scoreValue;
 
-                                    // Cek apakah nilai ini SUDAH dipakai oleh opsi LAIN dalam pertanyaan yang sama
+                                    // Cek apakah nilai ini sudah dipakai oleh opsi lain dalam pertanyaan yang sama
                                     const isTakenByOther =
                                         question.options.some(
                                             (opt) =>

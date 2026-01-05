@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\CategoryInterpretation;
 use App\Models\Module;
 use App\Models\Option;
@@ -317,5 +318,113 @@ class UserTestController extends Controller
         });
 
         return redirect()->route('exam.result', $test->id)->with('message', 'Tes berhasil dikumpulkan');
+    }
+
+    /**
+     * Submit Jawaban (Perbaikan Logic)
+     */
+    public function update(Request $request, $id)
+    {
+        $test = UserTest::where('user_id', Auth::id())->findOrFail($id);
+
+        // Jika sudah selesai, jangan diproses lagi
+        if ($test->finished_at) {
+            return redirect()->route('exam.result', $test->id);
+        }
+
+        DB::transaction(function () use ($request, $test) {
+            // 1. SIMPAN JAWABAN (Jika ada data yang dikirim)
+            // Kita cek input 'answers' secara eksplisit
+            $incomingAnswers = $request->input('answers', []);
+
+            if (!empty($incomingAnswers) && is_array($incomingAnswers)) {
+
+                // Ambil semua ID Opsi sekaligus untuk meminimalisir query ke DB (Performance Tuning)
+                $optionIds = array_keys($incomingAnswers);
+                $options = Option::whereIn('id', $optionIds)->get()->keyBy('id');
+
+                foreach ($incomingAnswers as $optionId => $score) {
+                    // Pastikan opsi valid ada di database
+                    if (isset($options[$optionId])) {
+                        $option = $options[$optionId];
+
+                        // Gunakan updateOrCreate untuk menyimpan/update jawaban
+                        UserAnswer::updateOrCreate(
+                            [
+                                'user_test_id' => $test->id,
+                                'option_id'    => $optionId,
+                            ],
+                            [
+                                // Pastikan nama kolom ini sesuai di database Anda ('questions_id' atau 'question_id')
+                                'questions_id' => $option->question_id,
+                                'score'        => $score,
+                            ]
+                        );
+                    }
+                }
+            }
+
+            // 2. MULAI PERHITUNGAN
+            // Ambil SEMUA jawaban yang ada di database untuk tes ini
+            // (Baik yang baru disimpan, maupun yang 'Simpan Sementara' sebelumnya)
+            $recordedAnswers = UserAnswer::with(['option.category'])
+                ->where('user_test_id', $test->id)
+                ->get();
+
+            // Siapkan template kategori
+            $allCategories = Category::all();
+            $groupedStats = [];
+
+            foreach ($allCategories as $cat) {
+                $groupedStats[$cat->id] = [
+                    'id'    => $cat->id,
+                    'name'  => $cat->name,
+                    'code'  => $cat->code,
+                    'score' => 0
+                ];
+            }
+
+            // Hitung Skor berdasarkan data di Database
+            foreach ($recordedAnswers as $ans) {
+                if ($ans->option && $ans->option->category) {
+                    $catId = $ans->option->category->id;
+                    if (isset($groupedStats[$catId])) {
+                        $groupedStats[$catId]['score'] += $ans->score;
+                    }
+                }
+            }
+
+            // 3. RANKING & INTERPRETASI
+            $rankedResults = array_values($groupedStats);
+
+            // Sort: Tertinggi ke Terendah
+            usort($rankedResults, function ($a, $b) {
+                return $b['score'] <=> $a['score'];
+            });
+
+            // Ambil Interpretasi
+            foreach ($rankedResults as $index => &$result) {
+                $rank = $index + 1;
+                $result['rank'] = $rank;
+
+                $interpretation = CategoryInterpretation::where('category_id', $result['id'])
+                    ->where('rank', $rank)
+                    ->first();
+
+                $result['description'] = $interpretation
+                    ? $interpretation->description
+                    : "Belum ada penjelasan untuk peringkat ini.";
+            }
+
+            // 4. FINALISASI TES
+            // Simpan hasil json dan tandai selesai
+            $test->update([
+                'finished_at' => now(),
+                'result'      => json_encode($rankedResults)
+            ]);
+        });
+
+        return redirect()->route('exam.result', $test->id)
+            ->with('message', 'Tes berhasil dikumpulkan');
     }
 }
