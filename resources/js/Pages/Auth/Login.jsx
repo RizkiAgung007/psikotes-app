@@ -112,7 +112,7 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                {/* Remeber me */}
+                {/* Remeber me
                 <div>
                     <label>
                         <Checkbox
@@ -127,7 +127,7 @@ export default function Login({ status, canResetPassword }) {
                             Ingat saya?
                         </span>
                     </label>
-                </div>
+                </div> */}
 
                 {/* Submit */}
                 <button
